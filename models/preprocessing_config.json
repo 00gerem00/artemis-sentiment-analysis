@@ -1,0 +1,30 @@
+{
+  "vocab_size": 12000,
+  "max_len": 60,
+  "embed_dim": 100,
+  "contraction_map": {
+    "can't": "cant",
+    "won't": "wont",
+    "don't": "dont",
+    "didn't": "didnt",
+    "doesn't": "doesnt",
+    "isn't": "isnt",
+    "aren't": "arent",
+    "wasn't": "wasnt",
+    "it's": "its",
+    "i'm": "im",
+    "i've": "ive",
+    "i'll": "ill",
+    "you're": "youre",
+    "they're": "theyre",
+    "that's": "thats"
+  },
+  "apostrophe_variants": [
+    "'",
+    "\u2019",
+    "\u2018",
+    "`",
+    "\u00b4",
+    "\u02bc"
+  ]
+}

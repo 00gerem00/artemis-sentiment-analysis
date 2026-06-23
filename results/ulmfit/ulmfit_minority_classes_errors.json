@@ -1,0 +1,555 @@
+[
+    {
+        "test_index": 7,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "polymarket i'm guessing artemisii will make an astounding <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 9,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "we can put people around the moon but we can't even figure out how to talk to them what kind of now <OOV> operation is nasa running rocket full moon woman astronaut astronaut medium dark skin tone astronaut astronaut united states artemis artemis2 <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 35,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "this is from 3 years ago on the artemis 1 which was unmanned just like the artemis 2 <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 46,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "artemis2 how sad is it than a 50 years old lie is <OOV> us for any joy or <OOV> of <OOV> and if today is a lie to lying over a lie doesn't work much <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 56,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "we better get a picture of that flag artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 66,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "i hate to be this way i really do but them artemis 2 boys ain’t never coming back <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 87,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "an orbit is 360 a 180 is a fly by that <OOV> path means an error as small as 1 m s could fail the mission the weird thing is that the artemis 1 mission which was to prove that everything works for artemis 2 used a <OOV> flight path instead of the higher risk flyby path i don't understand"
+    },
+    {
+        "test_index": 88,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "<OOV> terrikibiriti artemis is literally taking the same exact path as apollo 8 the first time we did this back in the 60s artemis 2 is no longer a trip then apollo 8 <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 104,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "ive been watching this artemis 2 space ship to the moon the whole journey but can someone explain why it still only looks the same size and has the same detail as when i look out my window rolling on the floor laughing do they not have night vision <OOV> zoom cameras or video is this a con <OOV> <OOV>"
+    },
+    {
+        "test_index": 106,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> what i don’t understand is they said artemis 2 reached 25 000 <OOV> that’s traveling around the earth in 1 hr that’s a <OOV> <OOV> also we’re traveling at 70k mph the moon <OOV> around us so they caught up then came back precisely after we traveled how far thru the universe <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 114,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "<OOV> <OOV> nasa kept reporting that artemis 2 went farther into space than man has ever gone before apollo 8 reportedly orbited the moon 8 times in 1968 are they saying that apollo 8 never happened <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 119,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "all that technology and <OOV> and still lose phone signal moon artemis2 nasa <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 127,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "the artemis 2 stuff is cool and all but who really cares <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 144,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "can we raise the apollo 11 audio visual crew from the dead please and bring <OOV> <OOV> too artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 179,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "a lot of y'all believe nothing about the artemisii launch to splash down i honestly can see both sides of the issue rolling on the floor laughing rolling on the floor laughing rolling on the floor laughing <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 182,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> <OOV> just learnt that artemis 2 landing on the moon is a <OOV> war in play america racing against china and russia to set record in space exploration <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 196,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "you are all idiots artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 218,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "artemis 2 did not take any flights to outer space except making a <OOV> of humans and taking pictures probably from a airplane flight at night using high quality professional photography of night pictures of the moon and night pictures <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 224,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> do we all know why thinking face it was a inflated <OOV> of the <OOV> to the actual size of artemis 2 entire ship rocket to complete construction on the launch tower thinking face face with raised eyebrow come on that was way too easy zany face <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 240,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> it's sad when i can't tell if this from artemis 2 or from an explosion from iran wild times <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 263,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "if the tech was documented then artemisii shouldn't be a test it should be a <OOV> the math doesn't add up money with wings stop sign nasa <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 267,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> make us understand how the artemis 2 knew it has to <OOV> in us from the vast space that too directly in the pacific ocean at exactly a point where all the cameras <OOV> and vehicles are already on the go <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 273,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "<OOV> <OOV> <OOV> they just did build your <OOV> machine called artemis 2 you’re claiming <OOV> <OOV> machine was so special that nobody could figure out how to build it again for 50 years oh and also they just built my <OOV> machine and it went to the moon yesterday ” <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 276,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "it's 2026 and the cameras nasa are using looks like a <OOV> from <OOV> nasa artemis2 conspiracy grimacing face <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 300,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "fuck artemis2 if they're thanking <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 318,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "zone astronomy so fake it’s <OOV> any faith <OOV> exploration today my <OOV> schools don’t even mention artemis 2 <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 325,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "grok considering the complexity of artemis 2 today despite technology did man ever went to the moon <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 338,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "considering all that is happening artemis 2 is a <OOV> attempt at distraction <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 343,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> is a bible <OOV> filter the woo and this is really worth watching why did the <OOV> say <OOV> was the 1st time humans had been to the moon imo <OOV> is <OOV> 'artemis 2 nasa fake <OOV> moon mission exposed ' <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 363,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "was the camera man drunk for the artemis 2 launch rolling on the floor laughing rolling on the floor laughing waited over 50 years for this artemisiilaunch nasa moon <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 370,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "the international space station is <OOV> <OOV> from earth but we are supposed to care about artemis 2 coming within 4 000 6 000 miles of the moon when we landed on the moon over 5 decades ago <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 371,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "took less than one day for the first space toilet to fail 10 days gonna be tight artemis2 <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 375,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> trump treating total <OOV> of iran with nuclear weapons nobody cares about artemis 2 right now as impressive as a moon shot is trump is <OOV> us all into hell <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 383,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "artemisii i mean planes fly and some people aren’t as fascinated despite the <OOV> of the concept of an air flight <OOV> the only fascinating thing for me is the impossible mission but all that risk for what a potential moon base planetary <OOV> boring <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 400,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "finally after 50 yrs or for the first time eyes artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 418,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "ok the artemis 2 crew are just <OOV> <OOV> nasa is trying to see if they survive testing equipment suits <OOV> lol im sorry but they are but very brave <OOV> <OOV> they are <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 423,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "just imagine artemis2 gets shot down by some aliens <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 473,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "in a press conference held on april 16 2026 artemis ii commander reid wiseman specifically thanked content creators for their role in sharing the mission's journey with the world ai the <OOV> <OOV> of artemis 2 as a hoax will only be <OOV> actors <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 491,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> i’m considering a career in <OOV> i predict that artemis 2 records some bullshit u f o <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 501,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "artemis 2 traveling at 17 000 mph per nasa for 4 days or 96 hours is 1 600 000 miles they nasa say the trip is 250 000 miles any questions <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 502,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "per a justice department source <OOV> had the artemis ii astronauts take the epstein files and <OOV> list with them to space for <OOV> <OOV> breaking artemislaunch artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 521,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "nasa mission control looks really old fashioned artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 522,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "artemis nasa another 2 <OOV> from the audience listening to the original moon missions and listening to this artemis 2 mission it seems there is a lot <OOV> going on at both ends hopefully the testing and training gets at least to the <OOV> level for the next flight <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 524,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "why tf are we even going to the fucking moon anyway do we not have enough problems down here on earth artemis 2 is such bullshit <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 535,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "nasa where is the flag of the usa and russia hoisted on moon by the astronauts of the 60s and 70s or the artemis 2 didn't pass that way <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 537,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "<OOV> <OOV> hybrid <OOV> <OOV> i heard they're planning on capturing <OOV> artemis 2 they're looking for a new form of energy as <OOV> 115 is too <OOV> and they're running out of 115 they want to reverse engineer our tech <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 570,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "theprimaldino nah they barely did a full orbit around the moon people will fall in love with the crew that steps on the moon artemis 2 will be <OOV> in a couple of months <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 582,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "great episode <OOV> you ended saying no matter hour <OOV> around the program it's great to see artemisii flying love that sentiment <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 604,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "<OOV> they could have even thrown in front porch ai and that would have helped it a little more <OOV> ugh artemisii nasa <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 611,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "i believe there are <OOV> happening behind closed <OOV> with <OOV> and his family and the <OOV> they expected <OOV> to follow their script that day and he changed his mind or <OOV> <OOV> the <OOV> and everyone else to shit their pants we know the truth and that matters i hope their production of the trial is akin to"
+    },
+    {
+        "test_index": 614,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "cfg 504 <OOV> it’s the same as the stage in <OOV> the grand theater watching and <OOV> the false god artemis this is artemis 2 so many are deceived that’s it that’s the end game deception … <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 645,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "the atlantic put artemis 2 photos behind a <OOV> lol <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 650,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "artemis2 when you think appolo was streaming live on tv <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 653,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "previously i thought the apollo astronauts never actually stepped on the moon and that they simply stayed inside the spacecraft the whole time completing only a round trip in lunar orbit now after watching the artemis 2 mission and seeing how close modern spacecraft can get to the moon i am convinced that the apollo crews never even made a"
+    },
+    {
+        "test_index": 657,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "<OOV> sentdefender there is no point to artemis 2 <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 674,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "looking at the artemis 2 live on board and outside footage i must say starlink is levels ahead in providing live footage <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 706,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "wtf is all this cheering and clapping they could have stepped out an hour ago easily artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 721,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "<OOV> <OOV> <OOV> artemis 2's toilet already failed a few hours into their 10 day mission nasa can't even make a toilet that works but you think they'll land on the moon <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 727,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "the <OOV> thing for me with artemis 2 is that the astronauts kept making the same hand <OOV> as each other at the same times all 4 of them they'll all pick at or hold their own hands at the same time they'd all fold their arms away at the same times <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 742,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "trying to appreciate artemis 2 is hard when you are in constant <OOV> of what america is <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 761,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "<OOV> <OOV> explain apollo 13 it took only 6 days voyage including a slingshot around the moon 6 days to cover same <OOV> at a slower pace the math is not mathing 10 days for artemis 2 at a faster speed makes no sense <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 765,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "artemis 2 was launched so nasa could <OOV> <OOV> for more funding unfortunately it didn’t work <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 782,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "realdonaldtrump brilliant <OOV> to hide away on the artemis 2 voyage disguised as the commander yet not only <OOV> the trip but able to observe and command the successful <OOV> on iran from the excellent <OOV> pure genius sir <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 789,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "we can travel <OOV> 000 km to the moon but not 0 5 <OOV> between our <OOV> priorities need a check artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 814,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "57 years later lol artemisii rocket <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 821,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "at least two lighting rigs can't travel to the moon sun too hot artemisii <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 826,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "<OOV> boy director just checked again and there’s no live video of artemis 2 takeoff from earth to space for a project as huge as that and considering a lot of people do not believe a stream like that should be everywhere dont you think so <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 830,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "about the artemisii mission those who were there in 1966 say they watched the moonlanding live how come we can’t watch the journey to go around the moon’s atmosphere live even if the feed is delayed nasa <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 843,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "i'm glad and definitely relieved that artemis 2 <OOV> made it safely back home and look forward to them being interviewed in the future and answering a few questions about their experiences the mission was much as i expected <OOV> <OOV> end <OOV> my <OOV> was of course with the lack of the <OOV> astrophotography that would have <OOV> the"
+    },
+    {
+        "test_index": 846,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Conspiratorial",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "saying artemis 2 went to the moon is like saying you went to washington <OOV> and just drove around the <OOV> <OOV> a few times <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 848,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "<OOV> nasa <OOV> just <OOV> the design plans to build the artemis 2 so this will be the last launch for another 50 years or so <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 858,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Enthusiastic",
+        "tweet_text": "glad the artemis2 crew landed safely and are <OOV> that’s it i lived thru the 9 previous apollo missions with 6 of them landing so this was uneventful to me maybe when they actually do something that <OOV> the billions that go into each mission i’ll get excited <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 886,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "highimpactflix i'm calling it now i don't think artemis 2 is coming back <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 889,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "the artemis2 was only 10 days long but on tonight’s interview on foxnews with <OOV> they were talking about having to <OOV> how to <OOV> with <OOV> hundred points cap fake lies bs <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 919,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Neutral",
+        "tweet_text": "artemis 2 went around the moon orbited it and came back while iran still doesn't have internet <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 950,
+        "true_label": "Conspiratorial",
+        "bilstm_pred_label": "Critical/Skeptical",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> <OOV> <OOV> okay the bible <OOV> the earth as being a firmament <OOV> in a <OOV> <OOV> <OOV> <OOV> reaching into the <OOV> why didn’t artemis 2 have any pictures of earth with <OOV> on it <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 955,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "we don't need elon for artemis 2 yeah but we definitely need him for future artemis missions grinning face with sweat <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 959,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Enthusiastic",
+        "ulmfit_pred_label": "Critical/Skeptical",
+        "tweet_text": "<OOV> artemisii i am very happy and proud about the success of this mission however i think spacex had set the bar high that this mission did not <OOV> it’s like comparing <OOV> to apple back in the day <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    },
+    {
+        "test_index": 977,
+        "true_label": "Critical/Skeptical",
+        "bilstm_pred_label": "Neutral",
+        "ulmfit_pred_label": "Conspiratorial",
+        "tweet_text": "<OOV> who knew there’s <OOV> artemisii nasa usnavy <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV> <OOV>"
+    }
+]

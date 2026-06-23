@@ -1,0 +1,102 @@
+{
+  "model_name": "BiLSTM_sd0.2_rd0.4_u32_lr0.0005",
+  "macro_f1": 0.6433,
+  "accuracy": 0.7354,
+  "class_names": [
+    "Conspiratorial",
+    "Critical/Skeptical",
+    "Enthusiastic",
+    "Neutral"
+  ],
+  "classification_report": {
+    "Conspiratorial": {
+      "precision": 0.432,
+      "recall": 0.6352941176470588,
+      "f1-score": 0.5142857142857142,
+      "support": 85.0
+    },
+    "Critical/Skeptical": {
+      "precision": 0.5308641975308642,
+      "recall": 0.4387755102040816,
+      "f1-score": 0.48044692737430167,
+      "support": 98.0
+    },
+    "Enthusiastic": {
+      "precision": 0.7939262472885033,
+      "recall": 0.8531468531468531,
+      "f1-score": 0.8224719101123595,
+      "support": 429.0
+    },
+    "Neutral": {
+      "precision": 0.8195718654434251,
+      "recall": 0.7015706806282722,
+      "f1-score": 0.7559943582510579,
+      "support": 382.0
+    },
+    "accuracy": 0.7354124748490946,
+    "macro avg": {
+      "precision": 0.6440905775656982,
+      "recall": 0.6571967904065664,
+      "f1-score": 0.6432997275058584,
+      "support": 994.0
+    },
+    "weighted avg": {
+      "precision": 0.7468968853563189,
+      "recall": 0.7354124748490946,
+      "f1-score": 0.7368494757415228,
+      "support": 994.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      54,
+      9,
+      8,
+      14
+    ],
+    [
+      24,
+      43,
+      20,
+      11
+    ],
+    [
+      19,
+      10,
+      366,
+      34
+    ],
+    [
+      28,
+      19,
+      67,
+      268
+    ]
+  ],
+  "per_class_metrics": {
+    "Conspiratorial": {
+      "precision": 0.432,
+      "recall": 0.6353,
+      "f1_score": 0.5143,
+      "support": 85
+    },
+    "Critical/Skeptical": {
+      "precision": 0.5309,
+      "recall": 0.4388,
+      "f1_score": 0.4804,
+      "support": 98
+    },
+    "Enthusiastic": {
+      "precision": 0.7939,
+      "recall": 0.8531,
+      "f1_score": 0.8225,
+      "support": 429
+    },
+    "Neutral": {
+      "precision": 0.8196,
+      "recall": 0.7016,
+      "f1_score": 0.756,
+      "support": 382
+    }
+  }
+}

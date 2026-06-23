@@ -1,0 +1,106 @@
+{
+  "model_name": "DistilBERT (fine-tuned)",
+  "config": {
+    "learning_rate": 3e-05,
+    "epochs": 3,
+    "weight_decay": 0.01
+  },
+  "test_macro_f1": 0.7063,
+  "class_names": [
+    "Conspiratorial",
+    "Critical/Skeptical",
+    "Enthusiastic",
+    "Neutral"
+  ],
+  "confusion_matrix": [
+    [
+      54,
+      13,
+      7,
+      11
+    ],
+    [
+      5,
+      62,
+      15,
+      16
+    ],
+    [
+      16,
+      18,
+      350,
+      45
+    ],
+    [
+      15,
+      28,
+      34,
+      305
+    ]
+  ],
+  "classification_report": {
+    "Conspiratorial": {
+      "precision": 0.6,
+      "recall": 0.6352941176470588,
+      "f1-score": 0.6171428571428571,
+      "support": 85.0
+    },
+    "Critical/Skeptical": {
+      "precision": 0.512396694214876,
+      "recall": 0.6326530612244898,
+      "f1-score": 0.5662100456621004,
+      "support": 98.0
+    },
+    "Enthusiastic": {
+      "precision": 0.8620689655172413,
+      "recall": 0.8158508158508159,
+      "f1-score": 0.8383233532934131,
+      "support": 429.0
+    },
+    "Neutral": {
+      "precision": 0.8090185676392573,
+      "recall": 0.7984293193717278,
+      "f1-score": 0.8036890645586298,
+      "support": 382.0
+    },
+    "accuracy": 0.7756539235412475,
+    "macro avg": {
+      "precision": 0.6958710568428437,
+      "recall": 0.7205568285235231,
+      "f1-score": 0.7063413301642502,
+      "support": 994.0
+    },
+    "weighted avg": {
+      "precision": 0.7847963330766103,
+      "recall": 0.7756539235412475,
+      "f1-score": 0.7792712963343053,
+      "support": 994.0
+    }
+  },
+  "per_class_metrics": {
+    "Conspiratorial": {
+      "precision": 0.6,
+      "recall": 0.6353,
+      "f1_score": 0.6171,
+      "support": 85
+    },
+    "Critical/Skeptical": {
+      "precision": 0.5124,
+      "recall": 0.6327,
+      "f1_score": 0.5662,
+      "support": 98
+    },
+    "Enthusiastic": {
+      "precision": 0.8621,
+      "recall": 0.8159,
+      "f1_score": 0.8383,
+      "support": 429
+    },
+    "Neutral": {
+      "precision": 0.809,
+      "recall": 0.7984,
+      "f1_score": 0.8037,
+      "support": 382
+    }
+  }
+}

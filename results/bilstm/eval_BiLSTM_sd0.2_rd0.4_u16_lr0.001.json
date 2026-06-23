@@ -1,0 +1,102 @@
+{
+  "model_name": "BiLSTM_sd0.2_rd0.4_u16_lr0.001",
+  "macro_f1": 0.6238,
+  "accuracy": 0.6962,
+  "class_names": [
+    "Conspiratorial",
+    "Critical/Skeptical",
+    "Enthusiastic",
+    "Neutral"
+  ],
+  "classification_report": {
+    "Conspiratorial": {
+      "precision": 0.5316455696202531,
+      "recall": 0.49411764705882355,
+      "f1-score": 0.5121951219512195,
+      "support": 85.0
+    },
+    "Critical/Skeptical": {
+      "precision": 0.39622641509433965,
+      "recall": 0.6428571428571429,
+      "f1-score": 0.490272373540856,
+      "support": 98.0
+    },
+    "Enthusiastic": {
+      "precision": 0.7483443708609272,
+      "recall": 0.7902097902097902,
+      "f1-score": 0.7687074829931972,
+      "support": 429.0
+    },
+    "Neutral": {
+      "precision": 0.8184818481848185,
+      "recall": 0.6492146596858639,
+      "f1-score": 0.724087591240876,
+      "support": 382.0
+    },
+    "accuracy": 0.6961770623742455,
+    "macro avg": {
+      "precision": 0.6236745509400846,
+      "recall": 0.6440998099529052,
+      "f1-score": 0.6238156424315372,
+      "support": 994.0
+    },
+    "weighted avg": {
+      "precision": 0.722052176260468,
+      "recall": 0.6961770623742455,
+      "f1-score": 0.7021732877574989,
+      "support": 994.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      42,
+      24,
+      10,
+      9
+    ],
+    [
+      12,
+      63,
+      17,
+      6
+    ],
+    [
+      13,
+      37,
+      339,
+      40
+    ],
+    [
+      12,
+      35,
+      87,
+      248
+    ]
+  ],
+  "per_class_metrics": {
+    "Conspiratorial": {
+      "precision": 0.5316,
+      "recall": 0.4941,
+      "f1_score": 0.5122,
+      "support": 85
+    },
+    "Critical/Skeptical": {
+      "precision": 0.3962,
+      "recall": 0.6429,
+      "f1_score": 0.4903,
+      "support": 98
+    },
+    "Enthusiastic": {
+      "precision": 0.7483,
+      "recall": 0.7902,
+      "f1_score": 0.7687,
+      "support": 429
+    },
+    "Neutral": {
+      "precision": 0.8185,
+      "recall": 0.6492,
+      "f1_score": 0.7241,
+      "support": 382
+    }
+  }
+}

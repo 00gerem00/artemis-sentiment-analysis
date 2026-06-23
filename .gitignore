@@ -1,0 +1,34 @@
+# ============================================================
+# ARTEMIS II — .gitignore
+# Large model weights are hosted externally (see README).
+# Only the heavy binaries are excluded; small configs/artifacts are kept.
+# ============================================================
+
+# --- GloVe embeddings (974 MB — public download, see README) ---
+models/embeddings/
+
+# --- Transformer weights (large binaries only; configs/tokenizers kept) ---
+models/transformers/*/model.safetensors
+
+# --- ULMFiT model (128 MB) ---
+models/ulmfit/ulmfit_classifier.pkl
+
+# --- BiLSTM: keep only the best model; exclude grid-search candidates ---
+models/bilstm/*.h5
+!models/bilstm/BiLSTM_sd0.2_rd0.2_u32_lr0.0005.h5
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# --- Virtual environments ---
+venv/
+env/
+.venv/
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/

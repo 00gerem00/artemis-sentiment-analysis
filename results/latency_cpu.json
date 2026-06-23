@@ -1,22 +1,22 @@
 {
   "BiLSTM": {
-    "latency_ms": 252.71,
+    "latency_ms": 111.12,
     "size_mb": 14.9
   },
   "ULMFiT": {
-    "latency_ms": 345.74,
+    "latency_ms": 310.14,
     "size_mb": 134.0
   },
   "DistilBERT": {
-    "latency_ms": 108.63,
+    "latency_ms": 88.7,
     "size_mb": 268.8
   },
   "RoBERTa": {
-    "latency_ms": 224.96,
+    "latency_ms": 272.85,
     "size_mb": 502.0
   },
   "DeBERTa-v3": {
-    "latency_ms": 721.13,
+    "latency_ms": 792.27,
     "size_mb": 748.9
   }
 }

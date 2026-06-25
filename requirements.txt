@@ -1,38 +1,51 @@
 # ============================================================
-# ARTEMIS II — Tweet Sentiment Analysis
-# Python dependencies for the full project (notebooks 01-05)
+# ARTEMIS II -- Tweet Sentiment Analysis
+# Unified requirements for notebooks (01-05) AND the dashboard
 #
-# Install:  pip install -r requirements.txt
+# Install:
+#   pip install -r requirements.txt
 #
-# Then download the spaCy English model (needed by notebook 02):
+# After install, download the spaCy English model:
 #   python -m spacy download en_core_web_sm
 #
-# Tested on Google Colab. The Transformer stack is pinned to the
-# versions the notebooks were built and tested on (transformers 4.x).
+# Heavy model files (BiLSTM, ULMFiT, Transformers) are fetched
+# separately:
+#   python download_models.py
+#
+# Transformer versions are pinned to the versions the notebooks
+# were built and tested on.
 # ============================================================
 
-# --- Core data handling & analysis (all notebooks) ---
+# --- Core data handling & analysis ---
 pandas==2.2.2
 numpy==2.0.2
 scikit-learn==1.6.1
 matplotlib==3.10.0
 seaborn==0.13.2
 
-# --- Text preprocessing & exploratory analysis (notebooks 01, 02) ---
+# --- EDA / NLP & text preprocessing ---
 emoji==2.12.1
 spacy==3.8.14
 wordcloud==1.9.6
 plotly==5.24.1
 
-# --- Recurrent models: BiLSTM & ULMFiT (notebook 03) ---
+# --- Recurrent models: BiLSTM & ULMFiT ---
 tensorflow==2.20.0
 fastai==2.8.7
 
-# --- Transformer models: DistilBERT, RoBERTa, DeBERTa-v3 (notebook 04) ---
+# --- Transformer models: DistilBERT, RoBERTa, DeBERTa-v3 ---
 transformers==4.44.2
 datasets==2.21.0
 accelerate==0.34.2
 sentencepiece==0.2.0
+torch>=2.1
+safetensors>=0.4
 
-# --- Utility: download heavy files from Google Drive ---
+# --- Dashboard (Dash app + Groq LLM explanations) ---
+dash>=2.14.0
+dash-bootstrap-components>=1.5.0
+groq>=0.9
+python-dotenv>=1.0
+
+# --- Utilities ---
 gdown==5.2.0

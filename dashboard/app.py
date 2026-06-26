@@ -66,7 +66,9 @@ except ImportError:
     pass
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")   # env fallback; runtime key preferred
-GROQ_MODEL   = "llama-3.1-8b-instant"               # swap model name here if needed
+GROQ_MODEL      = "llama-3.1-8b-instant"               # swap model name here if needed
+LLM_TEMPERATURE = 0.2
+LLM_MAX_TOKENS  = 120
 try:
     from groq import Groq as _Groq
     GROQ_PKG_OK = True   # package importable; actual key comes from the user at runtime
@@ -680,10 +682,11 @@ def _compute_nlp_cache() -> dict:
 
 print("[startup] Loading NLP cache…")
 nlp_cache = _load_nlp_cache()
-if not nlp_cache and SPACY_OK:
-    nlp_cache = _compute_nlp_cache()
+# spaCy NER processing is deferred: computed on first visit to the Linguistics & NER tab
+_nlp_spacy_computed = False   # True once _compute_nlp_cache() has run in this session
+_nlp_lock           = threading.Lock()
 
-FIG_BIGRAM = make_bigram_fig()   # computed here so _lemma_docs_no_artemis is populated if spaCy ran
+FIG_BIGRAM = make_bigram_fig()   # fallback (cleaned_text) until NER tab is first visited
 
 
 def make_pos_fig():
@@ -754,10 +757,6 @@ def make_top_entities_fig():
     return fig
 
 
-FIG_POS      = make_pos_fig()
-FIG_NER_TYPE = make_ner_type_fig()
-FIG_NER_ENT  = make_top_entities_fig()
-
 # ══════════════════════════════════════════════════════════════════════════════
 # LAZY MODEL LOADING & INFERENCE
 # ══════════════════════════════════════════════════════════════════════════════
@@ -807,6 +806,7 @@ def _load_transformer_model(name: str):
         tokenizer = AutoTokenizer.from_pretrained(path, local_files_only=True)
         model = AutoModelForSequenceClassification.from_pretrained(path, local_files_only=True)
         model.eval()
+        model.to("cpu")
         return model, tokenizer
     except Exception as e:
         raise RuntimeError(f"{name} load error: {e}")
@@ -872,6 +872,7 @@ def _predict_transformer(text: str, name: str) -> np.ndarray:
         cleaned, return_tensors="pt", truncation=True,
         max_length=256, padding=True,
     )
+    inputs = {k: v.to("cpu") for k, v in inputs.items()}
     with torch.no_grad():
         logits = model(**inputs).logits
     probs = torch.softmax(logits, dim=-1)[0].numpy().astype(float)
@@ -901,49 +902,251 @@ def run_inference(text: str, model_name: str) -> tuple[dict, float]:
 # GROQ EXPLANATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-def get_groq_explanation(tweet: str, predicted_class: str, probs_dict: dict,
-                         api_key: str = "") -> str | None:
-    """Return a post-hoc LLM rationale for a model's prediction.
+def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
+    """Phase 1: assess the tweet's actual sentiment ONCE, independent of any model.
 
-    api_key: runtime key provided by the user; falls back to GROQ_API_KEY env var.
-    Returns None when the package is missing or no key is available.
-    Returns a "[Groq error: …]" string on API/network failure so callers can
-    surface the problem without crashing.
+    Returns (reference_class, justification) or None when the package / key is
+    unavailable.  Returns ("[Groq error: …]", "") on API/network failure.
     """
     key = api_key.strip() or GROQ_API_KEY
     if not GROQ_PKG_OK or not key:
         return None
-    classes_str = ", ".join(
-        f'"{c}"' for c in ["Conspiratorial", "Critical/Skeptical", "Enthusiastic", "Neutral"]
+
+    system_msg = (
+        "You are an independent analyst assessing tweets about the Artemis II lunar mission. "
+        "The four sentiment classes are:\n"
+        "  • Conspiratorial — denies mission authenticity (CGI, hoax, green screen, cover-up)\n"
+        "  • Critical/Skeptical — questions the mission's value, cost, or execution; "
+        "practical doubts, not denial\n"
+        "  • Enthusiastic — positive, excited reactions to the mission\n"
+        "  • Neutral — informational, news-style, no strong opinion\n\n"
+        "Respond in EXACTLY this two-line format and nothing else:\n"
+        "Class: <exact class name>\n"
+        "Reason: <2–3 sentences explaining why this class fits best>\n"
+        "Do not mention any model prediction. Judge the tweet on its own merits."
     )
-    probs_str = "\n".join(
-        f"  - {c}: {p:.1%}" for c, p in sorted(probs_dict.items(), key=lambda x: -x[1])
+
+    few_shot = [
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Just watched the Artemis II crew board the Orion capsule LIVE. '
+                "Tears in my eyes — humanity's return to the Moon after 50 years! GO NASA!\""
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "Class: Enthusiastic\n"
+                "Reason: The tweet expresses strong personal emotion (\"tears in my eyes\") and "
+                "uses all-caps celebration (\"GO NASA!\"). The exclamatory language and historical "
+                "framing are unambiguous markers of enthusiastic positivity."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Notice how they cut the feed every time the camera points outside? '
+                "Same CGI tricks as Apollo — green screens don't fool everyone. "
+                'Wake up. #FakeArtemis"'
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "Class: Conspiratorial\n"
+                "Reason: The tweet alleges deliberate feed cuts and invokes the Apollo hoax "
+                "narrative. CGI denial language and the #FakeArtemis hashtag are hallmark "
+                "hoax-conspiracy signals."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Great, another $4 billion to orbit the Moon without landing. '
+                "SpaceX does this cheaper. Hope this PR stunt actually leads somewhere this time.\""
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "Class: Critical/Skeptical\n"
+                "Reason: The sarcastic opener, explicit cost complaint, and 'PR stunt' label "
+                "signal practical skepticism about the mission's value. There is no hoax "
+                "denial — this is criticism, not conspiracy."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Artemis II splashed down safely. Crew recovery is underway. '
+                'Total programme cost: approximately $4.1 billion."'
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "Class: Neutral\n"
+                "Reason: The tweet reports factual events without evaluative language. "
+                "Even the cost figure is presented as a data point, not a criticism."
+            ),
+        },
+    ]
+
+    messages = (
+        [{"role": "system", "content": system_msg}]
+        + few_shot
+        + [{"role": "user", "content": f'Tweet: "{tweet}"'}]
     )
-    prompt = (
-        "You are an independent analyst critically reviewing the output of an "
-        "NLP sentiment classifier trained on Artemis II mission tweets. "
-        "You do NOT know the model's internal reasoning and must NOT assume its "
-        f"prediction is correct. The four possible classes are: {classes_str}.\n\n"
-        f'Tweet: "{tweet}"\n\n'
-        f"Model predicted: {predicted_class}\n"
-        f"Class probabilities:\n{probs_str}\n\n"
-        "Respond in 2–4 sentences, covering these points in order:\n"
-        "1. State what sentiment the tweet actually expresses, in your own judgment "
-        "(pick the best-fitting class from the four above and briefly say why).\n"
-        "2. Evaluate whether the model's predicted class is appropriate: "
-        "if you agree, explain what in the text supports it; "
-        "if you disagree, say so clearly, explain why the prediction looks incorrect, "
-        "and state which class would fit better.\n"
-        "Be honest — you must be willing to say the prediction is wrong. "
-        "Do not soften or hedge to protect the model's answer."
-    )
+
     try:
         client = _Groq(api_key=key)
         resp = client.chat.completions.create(
             model=GROQ_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=240,
-            temperature=0.3,
+            messages=messages,
+            max_tokens=LLM_MAX_TOKENS,
+            temperature=LLM_TEMPERATURE,
+        )
+        raw = resp.choices[0].message.content.strip()
+        ref_class = ""
+        reason_parts: list[str] = []
+        for line in raw.splitlines():
+            s = line.strip()
+            if s.startswith("Class:"):
+                candidate = s[len("Class:"):].strip()
+                for c in CLASSES:
+                    if c.lower() == candidate.lower() or c.lower() in candidate.lower():
+                        ref_class = c
+                        break
+                if not ref_class:
+                    ref_class = candidate
+            elif s.startswith("Reason:"):
+                reason_parts.append(s[len("Reason:"):].strip())
+            elif reason_parts:
+                reason_parts.append(s)
+        if not ref_class:
+            for c in CLASSES:
+                if c in raw:
+                    ref_class = c
+                    break
+        justification = " ".join(p for p in reason_parts if p)
+        return ref_class or "Unknown", justification or raw
+    except Exception as e:
+        return f"[Groq error: {e}]", ""
+
+
+def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
+                        api_key: str = "") -> str | None:
+    """Phase 2: compare one model's prediction to the Phase-1 reference class.
+
+    Returns a 2–3 sentence assessment string, None when unavailable, or a
+    "[Groq error: …]" string on API/network failure.
+    """
+    key = api_key.strip() or GROQ_API_KEY
+    if not GROQ_PKG_OK or not key:
+        return None
+
+    system_msg = (
+        "You are reviewing an NLP model's sentiment prediction against an independent "
+        "reference assessment. The reference class was determined independently and "
+        "should be treated as the established assessment for this tweet.\n\n"
+        "Respond in 2–3 sentences:\n"
+        "• Prediction matches reference → confirm it is correct and briefly explain why "
+        "the reference class fits.\n"
+        "• Prediction differs from reference → state the prediction is wrong, name the "
+        "reference class as the better fit, and explain why.\n"
+        "Do not re-assess the tweet from scratch."
+    )
+
+    few_shot = [
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Just watched the Artemis II crew board the Orion capsule LIVE. '
+                "Tears in my eyes — humanity's return to the Moon after 50 years! GO NASA!\"\n"
+                "Reference class: Enthusiastic\n"
+                "Model predicted: Enthusiastic"
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "The model's prediction matches the reference: Enthusiastic is correct. "
+                "The exclamatory language and personal emotional reaction are clear "
+                "positive-sentiment markers consistent with the reference assessment."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Notice how they cut the feed every time the camera points outside? '
+                "Same CGI tricks as Apollo — green screens don't fool everyone. "
+                'Wake up. #FakeArtemis"\n'
+                "Reference class: Conspiratorial\n"
+                "Model predicted: Neutral"
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "The model's prediction is wrong. The reference class Conspiratorial fits "
+                "far better — the tweet invokes the Apollo hoax, uses CGI denial language, "
+                "and includes #FakeArtemis, none of which are compatible with Neutral."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Great, another $4 billion to orbit the Moon without landing. '
+                "SpaceX does this cheaper. Hope this PR stunt actually leads somewhere this time.\"\n"
+                "Reference class: Critical/Skeptical\n"
+                "Model predicted: Enthusiastic"
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "The model's prediction is wrong. The reference class Critical/Skeptical "
+                "fits far better — the sarcastic tone, cost complaint, and 'PR stunt' label "
+                "are clear skepticism markers that contradict an Enthusiastic classification."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "Artemis II splashed down safely. Crew recovery is underway. '
+                'Total programme cost: approximately $4.1 billion."\n'
+                "Reference class: Neutral\n"
+                "Model predicted: Neutral"
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "The model's prediction matches the reference: Neutral is correct. "
+                "The tweet reports factual events without evaluative language, consistent "
+                "with the reference assessment."
+            ),
+        },
+    ]
+
+    messages = (
+        [{"role": "system", "content": system_msg}]
+        + few_shot
+        + [{"role": "user", "content": (
+            f'Tweet: "{tweet}"\n'
+            f"Reference class: {reference_class}\n"
+            f"Model predicted: {predicted_class}"
+        )}]
+    )
+
+    try:
+        client = _Groq(api_key=key)
+        resp = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            max_tokens=LLM_MAX_TOKENS,
+            temperature=LLM_TEMPERATURE,
         )
         return resp.choices[0].message.content.strip()
     except Exception as e:
@@ -1154,8 +1357,8 @@ def model_result_card(model_name: str, probs_dict: dict, elapsed_ms: float) -> h
 
 
 def _live_model_block(model_name: str, probs_dict: dict, elapsed_ms: float,
-                      tweet: str, api_key: str) -> html.Div:
-    """Full card for the Live Test panel: prediction bar + post-hoc LLM explanation."""
+                      comparison_text: str | None, api_key_provided: bool) -> html.Div:
+    """Full card for the Live Test panel: prediction bar + Phase-2 per-model comparison."""
     if not probs_dict:
         return dbc.Alert(
             [html.B(model_name), " — model not available. ",
@@ -1167,35 +1370,33 @@ def _live_model_block(model_name: str, probs_dict: dict, elapsed_ms: float,
     predicted = max(probs_dict, key=probs_dict.get)
     color = CLASS_COLORS.get(predicted, "#00d4ff")
 
-    # ── LLM explanation ────────────────────────────────────────────────────────
-    key = (api_key or "").strip()
-    if key and GROQ_PKG_OK:
-        expl_raw = get_groq_explanation(tweet, predicted, probs_dict, key)
-        if expl_raw is None:
-            expl_node = html.P(
-                "Explanation unavailable.",
+    # ── Phase-2 comparison node ────────────────────────────────────────────────
+    if comparison_text is None:
+        if not GROQ_PKG_OK:
+            cmp_node = html.P(
+                "groq package not installed — run: pip install groq",
+                style={"color": "#94a3b8", "fontSize": "0.85rem",
+                       "fontStyle": "italic", "margin": 0},
+            )
+        elif not api_key_provided:
+            cmp_node = html.P(
+                "Enter your Groq API key in the left panel to enable LLM explanations.",
+                style={"color": "#64748b", "fontSize": "0.85rem",
+                       "fontStyle": "italic", "margin": 0},
+            )
+        else:
+            cmp_node = html.P(
+                "LLM comparison unavailable.",
                 style={"color": "#94a3b8", "fontSize": "0.88rem", "margin": 0},
             )
-        elif expl_raw.startswith("[Groq error:"):
-            expl_node = dbc.Alert(expl_raw, color="danger",
-                                  style={"fontSize": "0.82rem", "marginBottom": 0})
-        else:
-            expl_node = html.P(
-                expl_raw,
-                style={"color": "#e2e8f0", "lineHeight": "1.75",
-                       "fontSize": "0.92rem", "margin": 0},
-            )
-    elif not GROQ_PKG_OK:
-        expl_node = html.P(
-            "groq package not installed — run: pip install groq",
-            style={"color": "#94a3b8", "fontSize": "0.85rem",
-                   "fontStyle": "italic", "margin": 0},
-        )
+    elif comparison_text.startswith("[Groq error:"):
+        cmp_node = dbc.Alert(comparison_text, color="danger",
+                             style={"fontSize": "0.82rem", "marginBottom": 0})
     else:
-        expl_node = html.P(
-            "Enter your Groq API key in the left panel to enable LLM explanations.",
-            style={"color": "#64748b", "fontSize": "0.85rem",
-                   "fontStyle": "italic", "margin": 0},
+        cmp_node = html.P(
+            comparison_text,
+            style={"color": "#e2e8f0", "lineHeight": "1.75",
+                   "fontSize": "0.92rem", "margin": 0},
         )
 
     return html.Div([
@@ -1228,18 +1429,18 @@ def _live_model_block(model_name: str, probs_dict: dict, elapsed_ms: float,
             style={"height": "160px"},
         ),
 
-        # Row 4: LLM explanation section
+        # Row 4: Phase-2 per-model comparison against the reference
         html.Div([
             html.Hr(style={"borderColor": "#1e3a5f", "margin": "10px 0"}),
             html.Div([
-                html.Span("Post-hoc LLM Explanation",
+                html.Span("vs. LLM Reference",
                           style={"color": "#a78bfa", "fontWeight": "700",
                                  "fontSize": "0.75rem", "textTransform": "uppercase",
                                  "letterSpacing": "0.06em"}),
                 html.Span(f"  ·  Groq / {GROQ_MODEL}",
                           style={"color": "#475569", "fontSize": "0.72rem"}),
             ], style={"marginBottom": "8px"}),
-            expl_node,
+            cmp_node,
         ]),
     ], style={
         "background": "#0f1629",
@@ -1554,15 +1755,6 @@ def _summary_stats_table():
     )
 
 
-_nlp_summary_stats = []
-if nlp_cache:
-    _nlp_summary_stats = [
-        ("Total Sentences",
-         f"{nlp_cache.get('total_sentences', '—'):,}" if isinstance(nlp_cache.get("total_sentences"), int) else "—"),
-        ("Avg Sentences / Tweet", f"{nlp_cache.get('sents_per_doc_mean', 0):.1f}"),
-        ("Avg Tokens / Sentence", f"{nlp_cache.get('sent_length_mean', 0):.1f}"),
-    ]
-
 eda_content = dbc.Container([
     dbc.Tabs([
         # ── 3a Basic Statistics ─────────────────────────────────────────────
@@ -1581,26 +1773,10 @@ eda_content = dbc.Container([
         # ── 3b Linguistics / NER ────────────────────────────────────────────
         dbc.Tab(label="Linguistics & NER", tab_id="eda-ling", children=[
             html.Div(style={"height": "16px"}),
-            dbc.Alert(
-                "NLP analysis powered by spaCy (en_core_web_sm). "
-                + ("Results loaded from cache." if nlp_cache else
-                   "Cache not found — install spaCy and re-run to enable this section."),
-                color="info" if nlp_cache else "warning",
-                style={"fontSize": "0.85rem"},
+            dcc.Loading(
+                html.Div(id="eda-ling-content"),
+                type="circle", color="#00d4ff",
             ),
-            (dbc.Row([
-                dbc.Col(html.Div([
-                    html.Div(v, className="stat-value"),
-                    html.Div(k, className="stat-label"),
-                ], className="stat-badge"), width=4)
-                for k, v in _nlp_summary_stats
-            ]) if nlp_cache else html.Div()),
-            html.Div(style={"height": "16px"}),
-            dcc.Graph(figure=FIG_POS,      config={"displayModeBar": False}),
-            html.Div(style={"height": "8px"}),
-            dcc.Graph(figure=FIG_NER_TYPE, config={"displayModeBar": False}),
-            html.Div(style={"height": "8px"}),
-            dcc.Graph(figure=FIG_NER_ENT,  config={"displayModeBar": False}),
         ]),
 
         # ── 3c TF-IDF ───────────────────────────────────────────────────────
@@ -2173,6 +2349,63 @@ def render_wordclouds(active_tab):
 
 
 @app.callback(
+    Output("eda-ling-content", "children"),
+    Input("eda-inner-tabs", "active_tab"),
+    prevent_initial_call=True,
+)
+def render_ling_content(active_tab):
+    global nlp_cache, _nlp_spacy_computed
+    if active_tab != "eda-ling":
+        return no_update
+
+    if not nlp_cache:
+        if not SPACY_OK:
+            return dbc.Alert(
+                "spaCy is not installed — run: "
+                "pip install spacy && python -m spacy download en_core_web_sm",
+                color="warning", style={"fontSize": "0.85rem"},
+            )
+        with _nlp_lock:
+            if not _nlp_spacy_computed:
+                nlp_cache = _compute_nlp_cache()
+                _nlp_spacy_computed = True
+
+    if not nlp_cache:
+        return dbc.Alert(
+            "NLP computation produced no results.", color="danger",
+            style={"fontSize": "0.85rem"},
+        )
+
+    stats = [
+        ("Total Sentences",
+         f"{nlp_cache.get('total_sentences', '—'):,}"
+         if isinstance(nlp_cache.get("total_sentences"), int) else "—"),
+        ("Avg Sentences / Tweet", f"{nlp_cache.get('sents_per_doc_mean', 0):.1f}"),
+        ("Avg Tokens / Sentence", f"{nlp_cache.get('sent_length_mean', 0):.1f}"),
+    ]
+    return html.Div([
+        dbc.Alert(
+            "NLP analysis powered by spaCy (en_core_web_sm). "
+            "Computed on first visit, cached for the session.",
+            color="info", style={"fontSize": "0.85rem"},
+        ),
+        dbc.Row([
+            dbc.Col(html.Div([
+                html.Div(v, className="stat-value"),
+                html.Div(k, className="stat-label"),
+            ], className="stat-badge"), width=4)
+            for k, v in stats
+        ]),
+        html.Div(style={"height": "16px"}),
+        dcc.Graph(figure=make_pos_fig(),          config={"displayModeBar": False}),
+        html.Div(style={"height": "8px"}),
+        dcc.Graph(figure=make_ner_type_fig(),     config={"displayModeBar": False}),
+        html.Div(style={"height": "8px"}),
+        dcc.Graph(figure=make_top_entities_fig(), config={"displayModeBar": False}),
+    ])
+
+
+@app.callback(
     Output("live-results", "children"),
     Output("live-prediction-store", "data"),
     Input("live-analyze-btn", "n_clicks"),
@@ -2187,8 +2420,8 @@ def run_live_inference(n_clicks, tweet_text, selected_models, groq_key):
     if not selected_models:
         return dbc.Alert("Please select at least one model.", color="warning"), no_update
 
-    cleaned  = clean_tweet(tweet_text)
-    api_key  = (groq_key or "").strip()
+    cleaned = clean_tweet(tweet_text)
+    api_key = (groq_key or "").strip()
 
     header = html.P(
         [html.B("Cleaned text: "),
@@ -2196,19 +2429,81 @@ def run_live_inference(n_clicks, tweet_text, selected_models, groq_key):
         style={"color": "#94a3b8", "fontSize": "0.82rem", "marginBottom": "16px"},
     )
 
-    store_data = {"tweet": tweet_text, "predictions": {}}
-    model_blocks: list = [header]
+    # ── Phase 1: assess the tweet ONCE, independent of any model ──────────────
+    ref_class: str | None = None
+    ref_block = html.Div()
 
+    if api_key and GROQ_PKG_OK:
+        ref_result = get_groq_reference(tweet_text, api_key)
+        if ref_result is not None:
+            rc, rj = ref_result
+            if rc.startswith("[Groq error:"):
+                ref_block = dbc.Alert(
+                    [html.B("LLM Reference Error: "), rc],
+                    color="danger",
+                    style={"fontSize": "0.85rem", "marginBottom": "16px"},
+                )
+            else:
+                ref_class = rc
+                ref_color = CLASS_COLORS.get(rc, "#a78bfa")
+                ref_block = html.Div([
+                    html.Div([
+                        html.Span("LLM Reference Assessment",
+                                  style={"color": "#a78bfa", "fontWeight": "700",
+                                         "fontSize": "0.75rem",
+                                         "textTransform": "uppercase",
+                                         "letterSpacing": "0.06em"}),
+                        html.Span(f"  ·  Groq / {GROQ_MODEL}",
+                                  style={"color": "#475569", "fontSize": "0.72rem"}),
+                    ], style={"marginBottom": "8px"}),
+                    html.Div([
+                        html.Span("LLM reference assessment of the tweet:  ",
+                                  style={"color": "#94a3b8", "fontSize": "0.88rem"}),
+                        html.Span(rc,
+                                  style={"color": ref_color, "fontWeight": "700",
+                                         "fontSize": "0.95rem"}),
+                        html.Br(),
+                        html.Span(rj,
+                                  style={"color": "#e2e8f0", "fontSize": "0.88rem",
+                                         "lineHeight": "1.7"}),
+                    ], style={"marginBottom": "8px"}),
+                    html.P(
+                        f"Note: this reference judgment is itself an independent LLM "
+                        f"opinion (Groq / {GROQ_MODEL}, T={LLM_TEMPERATURE}) and may be "
+                        "wrong — it is not a verified ground-truth label.",
+                        style={"color": "#475569", "fontSize": "0.74rem",
+                               "fontStyle": "italic", "margin": 0},
+                    ),
+                ], style={
+                    "background": "#0d1526",
+                    "border": "1px solid #a78bfa40",
+                    "borderLeft": "3px solid #a78bfa",
+                    "borderRadius": "10px",
+                    "padding": "14px 18px",
+                    "marginBottom": "20px",
+                })
+
+    store_data = {"tweet": tweet_text, "predictions": {}}
+    model_blocks: list = [header, ref_block]
+
+    # ── Phase 2: per-model inference + comparison against Phase-1 reference ───
     for model_name in selected_models:
         probs_dict, elapsed = run_inference(tweet_text, model_name)
         if probs_dict:
             store_data["predictions"][model_name] = {
-                "probs":     probs_dict,
-                "predicted": max(probs_dict, key=probs_dict.get),
+                "probs":      probs_dict,
+                "predicted":  max(probs_dict, key=probs_dict.get),
                 "elapsed_ms": elapsed,
             }
+        predicted = max(probs_dict, key=probs_dict.get) if probs_dict else None
+        comparison_text: str | None = None
+        if api_key and GROQ_PKG_OK and ref_class and predicted:
+            comparison_text = get_groq_comparison(
+                tweet_text, ref_class, predicted, api_key
+            )
         model_blocks.append(
-            _live_model_block(model_name, probs_dict, elapsed, tweet_text, api_key)
+            _live_model_block(model_name, probs_dict, elapsed,
+                              comparison_text, bool(api_key))
         )
 
     return html.Div(model_blocks), store_data

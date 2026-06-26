@@ -139,7 +139,7 @@ CARD_STYLE = {
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TEXT CLEANING — exact replica from notebook 01_data_preparation
+# TEXT CLEANING: exact replica from notebook 01_data_preparation
 # ══════════════════════════════════════════════════════════════════════════════
 
 def clean_tweet_master(text: str) -> str:
@@ -462,7 +462,7 @@ def make_tfidf_fig():
     fig.update_layout(
         template=PLOTLY_TEMPLATE, paper_bgcolor="#0f1629", plot_bgcolor="#0f1629",
         height=500, margin=dict(l=120, t=40, b=10, r=10),
-        title_text="Top 20 Terms — Global TF-IDF",
+        title_text="Top 20 Terms: Global TF-IDF",
         xaxis_title="Cumulative TF-IDF Score",
     )
     return fig
@@ -536,7 +536,7 @@ FIG_TFIDF      = make_tfidf_fig()
 # FIG_BIGRAM computed after NLP cache load so lemma docs are available
 
 # ══════════════════════════════════════════════════════════════════════════════
-# WORD CLOUDS — generated in memory on demand, never written to disk
+# WORD CLOUDS: generated in memory on demand, never written to disk
 # ══════════════════════════════════════════════════════════════════════════════
 
 DOMAIN_STOPS = {
@@ -915,11 +915,11 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
     system_msg = (
         "You are an independent analyst assessing tweets about the Artemis II lunar mission. "
         "The four sentiment classes are:\n"
-        "  • Conspiratorial — denies mission authenticity (CGI, hoax, green screen, cover-up)\n"
-        "  • Critical/Skeptical — questions the mission's value, cost, or execution; "
+        "  • Conspiratorial: denies mission authenticity (CGI, hoax, green screen, cover-up)\n"
+        "  • Critical/Skeptical: questions the mission's value, cost, or execution; "
         "practical doubts, not denial\n"
-        "  • Enthusiastic — positive, excited reactions to the mission\n"
-        "  • Neutral — informational, news-style, no strong opinion\n\n"
+        "  • Enthusiastic: positive, excited reactions to the mission\n"
+        "  • Neutral: informational, news-style, no strong opinion\n\n"
         "Respond in EXACTLY this two-line format and nothing else:\n"
         "Class: <exact class name>\n"
         "Reason: <2–3 sentences explaining why this class fits best>\n"
@@ -931,7 +931,7 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
             "role": "user",
             "content": (
                 'Tweet: "Just watched the Artemis II crew board the Orion capsule LIVE. '
-                "Tears in my eyes — humanity's return to the Moon after 50 years! GO NASA!\""
+                "Tears in my eyes! humanity's return to the Moon after 50 years! GO NASA!\""
             ),
         },
         {
@@ -947,7 +947,7 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
             "role": "user",
             "content": (
                 'Tweet: "Notice how they cut the feed every time the camera points outside? '
-                "Same CGI tricks as Apollo — green screens don't fool everyone. "
+                "Same CGI tricks as Apollo, green screens don't fool everyone. "
                 'Wake up. #FakeArtemis"'
             ),
         },
@@ -973,7 +973,7 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
                 "Class: Critical/Skeptical\n"
                 "Reason: The sarcastic opener, explicit cost complaint, and 'PR stunt' label "
                 "signal practical skepticism about the mission's value. There is no hoax "
-                "denial — this is criticism, not conspiracy."
+                "denial, this is criticism, not conspiracy."
             ),
         },
         {
@@ -1063,7 +1063,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
             "role": "user",
             "content": (
                 'Tweet: "Just watched the Artemis II crew board the Orion capsule LIVE. '
-                "Tears in my eyes — humanity's return to the Moon after 50 years! GO NASA!\"\n"
+                "Tears in my eyes, humanity's return to the Moon after 50 years! GO NASA!\"\n"
                 "Reference class: Enthusiastic\n"
                 "Model predicted: Enthusiastic"
             ),
@@ -1080,7 +1080,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
             "role": "user",
             "content": (
                 'Tweet: "Notice how they cut the feed every time the camera points outside? '
-                "Same CGI tricks as Apollo — green screens don't fool everyone. "
+                "Same CGI tricks as Apollo, green screens don't fool everyone. "
                 'Wake up. #FakeArtemis"\n'
                 "Reference class: Conspiratorial\n"
                 "Model predicted: Neutral"
@@ -1090,7 +1090,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
             "role": "assistant",
             "content": (
                 "The model's prediction is wrong. The reference class Conspiratorial fits "
-                "far better — the tweet invokes the Apollo hoax, uses CGI denial language, "
+                "far better, the tweet invokes the Apollo hoax, uses CGI denial language, "
                 "and includes #FakeArtemis, none of which are compatible with Neutral."
             ),
         },
@@ -1107,7 +1107,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
             "role": "assistant",
             "content": (
                 "The model's prediction is wrong. The reference class Critical/Skeptical "
-                "fits far better — the sarcastic tone, cost complaint, and 'PR stunt' label "
+                "fits far better, the sarcastic tone, cost complaint, and 'PR stunt' label "
                 "are clear skepticism markers that contradict an Enthusiastic classification."
             ),
         },
@@ -1169,7 +1169,7 @@ def confusion_matrix_fig(cm: np.ndarray, classes: list[str], title: str) -> go.F
             ))
     fig = go.Figure(go.Heatmap(
         z=cm_pct, x=classes, y=classes,
-        colorscale="Blues", showscale=True, zmin=0, zmax=100,
+        colorscale="Viridis", showscale=True, zmin=0, zmax=100,
         colorbar=dict(title="%", ticksuffix="%", tickfont=dict(size=12)),
     ))
     fig.update_layout(
@@ -1500,17 +1500,17 @@ home_content = dbc.Container([
                 html.P([
                     "A natural language processing study of public opinion on ",
                     html.B("NASA's Artemis II mission"),
-                    " — the first crewed lunar flyby since Apollo 17 (April 2026). "
+                    ", the first crewed lunar flyby since Apollo 17 (April 2026). "
                     "The project collects, annotates, and classifies Twitter/X posts "
                     "into four sentiment categories using five NLP models ranging from "
-                    "recurrent neural networks to large pre-trained Transformers.",
+                    "Neural-Networks to large pre-trained Transformers.",
                 ], style={"color": "#e2e8f0", "lineHeight": "1.7", "maxWidth": "720px"}),
                 html.Div([
-                    html.Span("Dataunderdogs", style={
+                    html.Span("DATAUNDERDOGS", style={
                         "color": "#ffd700", "fontWeight": "600", "fontSize": "0.9rem",
                     }),
                     html.Span(
-                        "  ·  Mirko Dervishi · Matteo Gerevini · Andrea Grulla · Lorenzo Meroni",
+                        "  ·  MIRKO DERVISHI · MATTEO GEREVINI · ANDREA GRULLA · LORENZO MERONI",
                         style={"color": "#94a3b8", "fontSize": "0.88rem"},
                     ),
                 ], style={"marginTop": "12px"}),
@@ -1575,15 +1575,15 @@ home_content = dbc.Container([
                            "five targeted collection windows:", style={"color": "#e2e8f0"}),
                     html.Ul([
                         html.Li([html.Span("Departure ", style={"color": "#a78bfa", "fontWeight": "600"}),
-                                 "— Apr 01–03, 2026"]),
+                                 ": Apr 01–03, 2026"]),
                         html.Li([html.Span("Photo Day ", style={"color": "#a78bfa", "fontWeight": "600"}),
-                                 "— Apr 03–05 (supplemental)"]),
+                                 ": Apr 03–05 (supplemental)"]),
                         html.Li([html.Span("Flyby ", style={"color": "#00d4ff", "fontWeight": "600"}),
-                                 "— Apr 06–08, 2026"]),
+                                 ": Apr 06–08, 2026"]),
                         html.Li([html.Span("Return ", style={"color": "#22c55e", "fontWeight": "600"}),
-                                 "— Apr 10–12, 2026"]),
+                                 ": Apr 10–12, 2026"]),
                         html.Li([html.Span("Conspiracy Hunt ", style={"color": "#ef4444", "fontWeight": "600"}),
-                                 "— targeted keyword scrape (supplemental)"]),
+                                 ": targeted keyword scrape (supplemental)"]),
                     ], style={"color": "#94a3b8", "lineHeight": "1.9"}),
                     html.P([
                         "Filters applied: ", html.Code("lang:en"), ", ",
@@ -1614,7 +1614,7 @@ home_content = dbc.Container([
 prep_steps = [
     ("1. Raw Data Merge", "Five CSV files (flyby, return, departure, conspiracyhunt, photoday) loaded and concatenated. Each row tagged with its source file. Total: 11,969 rows."),
     ("2. Drop Missing Labels", "Rows without a Sentiment_label (NaN) removed. Remaining: 6,671 labeled rows. Shorthand labels mapped to full names: E→Enthusiastic, N→Neutral, C→Conspiratorial, S→Critical/Skeptical."),
-    ("3. Text Cleaning", "Applied sequentially: (A) Mojibake fix (Latin-1 → UTF-8 decode attempt); (B) Emoji demojization — preserving semantic content; (C) URL removal; (D) '@' symbol removal (keeps username); (E) '#' removal (keeps text); (F) HTML entity removal (&amp; etc.); (G) Whitespace normalization."),
+    ("3. Text Cleaning", "Applied sequentially: (A) Mojibake fix (Latin-1 → UTF-8 decode attempt); (B) Emoji demojization, preserving semantic content; (C) URL removal; (D) '@' symbol removal (keeps username); (E) '#' removal (keeps text); (F) HTML entity removal (&amp; etc.); (G) Whitespace normalization."),
     ("4. Exact-Duplicate Removal", "12 exact duplicate tweets (matching on raw text) removed. Remaining: 6,659."),
     ("5. Near-Duplicate Removal", "Tweets masked by replacing @mentions→<USER> and URLs→<URL>, then lowercased. 35 near-duplicates removed. Remaining: 6,624."),
     ("6. Final Formatting", "Underscores in demojized text (e.g. folded_hands) replaced with spaces; whitespace re-normalized."),
@@ -1911,7 +1911,7 @@ models_content = dbc.Container([
         ]),
 
         # ── 4b Transformers ─────────────────────────────────────────────────
-        dbc.Tab(label="Transformer Models", tab_id="models-tr", children=[
+        dbc.Tab(label="Transformers", tab_id="models-tr", children=[
             html.Div(style={"height": "16px"}),
             dbc.Alert(
                 "Metrics recomputed from saved probability files (probs_*.npy) via scikit-learn. "
@@ -1933,7 +1933,7 @@ models_content = dbc.Container([
             dcc.Graph(figure=FIG_COMPARISON_BUBBLE, config={"displayModeBar": False}),
             html.Hr(style={"borderColor": "#1e3a5f"}),
 
-            html.Div("Live Inference — Test-Set Tweet", className="section-header"),
+            html.Div("Live Inference: Test-Set Tweet", className="section-header"),
             dbc.Alert(
                 [
                     html.B("100-tweet balanced batch"),
@@ -2112,7 +2112,7 @@ live_test_content = dbc.Container([
                 "stored or written to disk.",
             ], style={"color": "#64748b", "fontSize": "0.78rem", "lineHeight": "1.55"}),
             (dbc.Alert(
-                "groq package not installed — run: pip install groq",
+                "groq package not installed; run: pip install groq",
                 color="warning", style={"fontSize": "0.78rem", "marginTop": "6px"},
             ) if not GROQ_PKG_OK else html.Div()),
         ], width=12, lg=4),
@@ -2334,7 +2334,7 @@ def render_wordclouds(active_tab):
         ])
 
     return html.Div([
-        _img_el("global", "Global Word Cloud — All Classes"),
+        _img_el("global", "Global Word Cloud: All Classes"),
         html.Div(style={"height": "20px"}),
         html.Div("Per-Class Word Clouds (domain anchors removed)", className="section-header"),
         dbc.Row([
@@ -2361,7 +2361,7 @@ def render_ling_content(active_tab):
     if not nlp_cache:
         if not SPACY_OK:
             return dbc.Alert(
-                "spaCy is not installed — run: "
+                "spaCy is not installed, run: "
                 "pip install spacy && python -m spacy download en_core_web_sm",
                 color="warning", style={"fontSize": "0.85rem"},
             )
@@ -2470,7 +2470,7 @@ def run_live_inference(n_clicks, tweet_text, selected_models, groq_key):
                     html.P(
                         f"Note: this reference judgment is itself an independent LLM "
                         f"opinion (Groq / {GROQ_MODEL}, T={LLM_TEMPERATURE}) and may be "
-                        "wrong — it is not a verified ground-truth label.",
+                        "wrong. It is not a verified ground-truth label!",
                         style={"color": "#475569", "fontSize": "0.74rem",
                                "fontStyle": "italic", "margin": 0},
                     ),
@@ -2557,7 +2557,7 @@ def run_comparison_inference(n_clicks, store_data):
     tweet = store_data["tweet"]
     cards: list = [
         html.P(
-            html.B("Running all 5 models — first call per model loads weights…"),
+            html.B("Running all 5 models. First call per model loads weights…"),
             style={"color": "#94a3b8", "fontSize": "0.85rem", "marginBottom": "8px"},
         ),
     ]

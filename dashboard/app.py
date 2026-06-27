@@ -1,5 +1,5 @@
 """
-ARTEMIS II — Sentiment Analysis Dashboard
+ARTEMIS II - Sentiment Analysis Dashboard
 dashboard/app.py
 
 Run from repo root:   python dashboard/app.py
@@ -85,7 +85,7 @@ PROCESSED_DIR = DATA_DIR / "processed"
 SPLITS_DIR    = DATA_DIR / "splits"
 MODELS_DIR    = ROOT / "models"
 RESULTS_DIR   = ROOT / "results"
-# No wordcloud directory — clouds are generated in memory, never saved to disk.
+# No wordcloud directory; clouds are generated in memory, never saved to disk.
 
 MASTER_CSV      = PROCESSED_DIR / "artemis_master_dataset.csv"
 TEST_CSV        = SPLITS_DIR / "test_split.csv"
@@ -281,7 +281,7 @@ def _download_notice() -> html.Div:
         return html.Div()
     return dbc.Alert(
         [
-            html.B("Model weights not found — "),
+            html.B("Model weights not found: "),
             f"Missing: {', '.join(_missing_heavy)}. ",
             "Run ", html.Code("python download_models.py"),
             " from the repo root to download them.",
@@ -473,7 +473,7 @@ def make_bigram_fig():
         return _empty_fig()
 
     # Prefer spaCy-lemmatized docs (matches notebook 02 cell-52):
-    #   TfidfVectorizer(max_features=2000, ngram_range=(2,2))  — no stop_words;
+    #   TfidfVectorizer(max_features=2000, ngram_range=(2,2))  - no stop_words;
     #   stops already removed during lemmatization.
     if _lemma_docs_no_artemis and len(_lemma_docs_no_artemis) == len(df_eda):
         corpus = _lemma_docs_no_artemis
@@ -574,7 +574,7 @@ def _wc_b64(corpus: str, colormap: str = "plasma",
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# NLP CACHE (spaCy-based, optional) — read from disk, computed in memory only
+# NLP CACHE (spaCy-based, optional): read from disk, computed in memory only
 # ══════════════════════════════════════════════════════════════════════════════
 
 nlp_cache = {}
@@ -649,7 +649,7 @@ def _compute_nlp_cache() -> dict:
         top = Counter(entity_by_label.get(etype, [])).most_common(10)
         top_entities[etype] = [{"entity": e, "count": c} for e, c in top]
 
-    # Build both lemma-doc variants in one pass — matches notebook 02 cell-42
+    # Build both lemma-doc variants in one pass; matches notebook 02 cell-42
     # _lemma_docs:            WITH 'artemis'  (global word cloud, notebook cell-78)
     # _lemma_docs_no_artemis: WITHOUT 'artemis' (bigrams, notebook cell-52)
     lems_with, lems_without = [], []
@@ -770,15 +770,125 @@ def _model_file_ok(name: str) -> bool:
     return path is not None and path.exists()
 
 
+def _bilstm_h5py_fallback():
+    """Rebuild BiLSTM architecture and load weights from .h5 via h5py.
+
+    Used when tensorflow.keras load_model() fails with a config-deserialization
+    error (e.g. 'quantization_config' unknown in Keras 3.x).  Locates weight
+    datasets dynamically so it does not rely on save-specific layer-suffix names.
+    """
+    import h5py  # type: ignore
+    from tensorflow.keras.models import Sequential  # type: ignore
+    from tensorflow.keras.layers import (  # type: ignore
+        Embedding, SpatialDropout1D, Bidirectional, LSTM, Dense,
+    )
+
+    max_len = prep_cfg.get("max_len", 60)
+
+    # Walk the h5 file and collect every leaf dataset.
+    all_datasets: dict[str, np.ndarray] = {}
+    with h5py.File(str(BILSTM_H5), "r") as hf:
+        root = hf.get("model_weights", hf)  # fall back to root if key absent
+
+        def _collect(name: str, obj) -> None:
+            if isinstance(obj, h5py.Dataset):
+                all_datasets[name] = obj[:]
+
+        root.visititems(_collect)
+
+    emb_w = None
+    fw_k = fw_rk = fw_b = None
+    bw_k = bw_rk = bw_b = None
+    d_k = d_b = None
+
+    for path, data in all_datasets.items():
+        lo = path.lower()
+        base = path.split("/")[-1]
+        if ":" in base:  # strip TF tensor-index suffix (e.g. ":0")
+            base = base.rsplit(":", 1)[0]
+
+        if base == "embeddings" and "embedding" in lo:
+            emb_w = data
+        elif "forward" in lo:
+            if base == "kernel" and fw_k is None:
+                fw_k = data
+            elif base == "recurrent_kernel":
+                fw_rk = data
+            elif base == "bias" and fw_b is None:
+                fw_b = data
+        elif "backward" in lo:
+            if base == "kernel" and bw_k is None:
+                bw_k = data
+            elif base == "recurrent_kernel":
+                bw_rk = data
+            elif base == "bias" and bw_b is None:
+                bw_b = data
+        elif "dense" in lo and "forward" not in lo and "backward" not in lo:
+            if base == "kernel" and d_k is None:
+                d_k = data
+            elif base == "bias" and d_b is None:
+                d_b = data
+
+    missing = [n for n, w in [
+        ("embedding.embeddings", emb_w),
+        ("forward_lstm.kernel", fw_k), ("forward_lstm.recurrent_kernel", fw_rk),
+        ("forward_lstm.bias", fw_b),
+        ("backward_lstm.kernel", bw_k), ("backward_lstm.recurrent_kernel", bw_rk),
+        ("backward_lstm.bias", bw_b),
+        ("dense.kernel", d_k), ("dense.bias", d_b),
+    ] if w is None]
+    if missing:
+        raise RuntimeError(f"h5py fallback: could not locate weights: {missing}")
+
+    input_dim, output_dim = emb_w.shape
+    model = Sequential([
+        Embedding(input_dim, output_dim, input_length=max_len),
+        SpatialDropout1D(0.2),
+        Bidirectional(LSTM(32, recurrent_dropout=0.2)),
+        Dense(len(CLASSES), activation="softmax"),
+    ])
+    # Force a build so all layer weights are allocated before set_weights.
+    model(np.zeros((1, max_len), dtype=np.int32), training=False)
+
+    # layers: 0=Embedding, 1=SpatialDropout1D, 2=Bidirectional, 3=Dense
+    model.layers[0].set_weights([emb_w])
+    model.layers[2].set_weights([fw_k, fw_rk, fw_b, bw_k, bw_rk, bw_b])
+    model.layers[3].set_weights([d_k, d_b])
+    return model
+
+
 def _load_bilstm():
+    # Level 1: normal load_model path (fast; works when Keras versions match).
+    _e1 = None
     try:
         from tensorflow.keras.models import load_model  # type: ignore
         model = load_model(str(BILSTM_H5), compile=False)
-        with open(TOKENIZER_PATH, "rb") as f:
-            tokenizer = pickle.load(f)
-        return model, tokenizer
     except Exception as e:
-        raise RuntimeError(f"BiLSTM load error: {e}")
+        msg = str(e).lower()
+        is_config_err = any(k in msg for k in (
+            "unrecognized keyword", "quantization_config",
+            "cannot deserialize", "deserialization",
+        ))
+        if not is_config_err:
+            raise RuntimeError(f"BiLSTM load error: {e}") from e
+        print(f"  [bilstm] load_model failed ({type(e).__name__}); using h5py fallback…")
+        _e1 = e
+        model = None
+
+    # Level 2: h5py fallback (handles cross-version config-deserialization errors).
+    if model is None:
+        try:
+            model = _bilstm_h5py_fallback()
+        except Exception as e2:
+            raise RuntimeError(
+                f"BiLSTM load error: both load paths failed.\n"
+                f"  load_model: {_e1}\n"
+                f"  h5py fallback: {e2}"
+            ) from e2
+
+    with open(TOKENIZER_PATH, "rb") as f:
+        tokenizer = pickle.load(f)
+    return model, tokenizer
 
 
 def _load_ulmfit():
@@ -902,6 +1012,17 @@ def run_inference(text: str, model_name: str) -> tuple[dict, float]:
 # GROQ EXPLANATION
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _clean_dashes(text: str) -> str:
+    """Replace unicode em/en dashes with plain ASCII hyphen for clean display."""
+    if not isinstance(text, str):
+        return text
+    return (text
+            .replace("—", "-")
+            .replace("–", "-")
+            .replace("‒", "-")
+            .replace("−", "-"))
+
+
 def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
     """Phase 1: assess the tweet's actual sentiment ONCE, independent of any model.
 
@@ -922,7 +1043,7 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
         "  • Neutral: informational, news-style, no strong opinion\n\n"
         "Respond in EXACTLY this two-line format and nothing else:\n"
         "Class: <exact class name>\n"
-        "Reason: <2–3 sentences explaining why this class fits best>\n"
+        "Reason: <2-3 sentences explaining why this class fits best>\n"
         "Do not mention any model prediction. Judge the tweet on its own merits."
     )
 
@@ -1030,7 +1151,7 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
                     ref_class = c
                     break
         justification = " ".join(p for p in reason_parts if p)
-        return ref_class or "Unknown", justification or raw
+        return ref_class or "Unknown", _clean_dashes(justification or raw)
     except Exception as e:
         return f"[Groq error: {e}]", ""
 
@@ -1039,7 +1160,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
                         api_key: str = "") -> str | None:
     """Phase 2: compare one model's prediction to the Phase-1 reference class.
 
-    Returns a 2–3 sentence assessment string, None when unavailable, or a
+    Returns a 2-3 sentence assessment string, None when unavailable, or a
     "[Groq error: …]" string on API/network failure.
     """
     key = api_key.strip() or GROQ_API_KEY
@@ -1050,7 +1171,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
         "You are reviewing an NLP model's sentiment prediction against an independent "
         "reference assessment. The reference class was determined independently and "
         "should be treated as the established assessment for this tweet.\n\n"
-        "Respond in 2–3 sentences:\n"
+        "Respond in 2-3 sentences:\n"
         "• Prediction matches reference → confirm it is correct and briefly explain why "
         "the reference class fits.\n"
         "• Prediction differs from reference → state the prediction is wrong, name the "
@@ -1148,7 +1269,7 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
             max_tokens=LLM_MAX_TOKENS,
             temperature=LLM_TEMPERATURE,
         )
-        return resp.choices[0].message.content.strip()
+        return _clean_dashes(resp.choices[0].message.content.strip())
     except Exception as e:
         return f"[Groq error: {e}]"
 
@@ -1156,21 +1277,35 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
 # UI HELPER FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
+_CM_COLORSCALE = [
+    [0.0,  "#152a5a"],
+    [0.35, "#1a5090"],
+    [0.65, "#1a8abf"],
+    [0.85, "#4ab8e0"],
+    [1.0,  "#b0e4f5"],
+]
+
+
 def confusion_matrix_fig(cm: np.ndarray, classes: list[str], title: str) -> go.Figure:
     cm_pct = cm.astype(float) / (cm.sum(axis=1, keepdims=True) + 1e-9) * 100
     annotations = []
     for i in range(len(classes)):
         for j in range(len(classes)):
+            text_color = "#0a0f1e" if cm_pct[i, j] > 55 else "#e2e8f0"
             annotations.append(dict(
                 x=j, y=i,
                 text=f"<b>{cm[i, j]}</b><br>{cm_pct[i, j]:.1f}%",
-                showarrow=False, font=dict(color="white", size=14),
+                showarrow=False, font=dict(color=text_color, size=14),
                 xref="x", yref="y",
             ))
     fig = go.Figure(go.Heatmap(
         z=cm_pct, x=classes, y=classes,
-        colorscale="Viridis", showscale=True, zmin=0, zmax=100,
-        colorbar=dict(title="%", ticksuffix="%", tickfont=dict(size=12)),
+        colorscale=_CM_COLORSCALE, showscale=True, zmin=0, zmax=100,
+        colorbar=dict(
+            title="%", ticksuffix="%",
+            tickfont=dict(size=12, color="#e2e8f0"),
+            title_font=dict(color="#e2e8f0"),
+        ),
     ))
     fig.update_layout(
         template=PLOTLY_TEMPLATE, paper_bgcolor="#0f1629", plot_bgcolor="#0f1629",
@@ -1201,7 +1336,7 @@ def classification_report_table(report: dict) -> dbc.Table:
         html.Td(f"{macro.get('precision', 0):.4f}"),
         html.Td(f"{macro.get('recall', 0):.4f}"),
         html.Td(f"{macro.get('f1-score', 0):.4f}"),
-        html.Td("—"),
+        html.Td("N/A"),
     ], style={"borderTop": "1px solid #1e3a5f"}))
     return dbc.Table(
         [html.Thead(html.Tr([
@@ -1220,13 +1355,13 @@ def model_comparison_table() -> dbc.Table:
         lat = latency_data.get(name, {})
         rows.append(html.Tr([
             html.Td(html.B(name)),
-            html.Td(f"{m.get('macro_f1', '—')}"),
-            html.Td(f"{m.get('macro_prec', '—')}"),
-            html.Td(f"{m.get('macro_rec', '—')}"),
-            html.Td(f"{m.get('conspir_f1', '—')}"),
-            html.Td(f"{m.get('critical_f1', '—')}"),
-            html.Td(f"{lat.get('latency_ms', '—')}"),
-            html.Td(f"{lat.get('size_mb', '—')}"),
+            html.Td(f"{m.get('macro_f1', 'N/A')}"),
+            html.Td(f"{m.get('macro_prec', 'N/A')}"),
+            html.Td(f"{m.get('macro_rec', 'N/A')}"),
+            html.Td(f"{m.get('conspir_f1', 'N/A')}"),
+            html.Td(f"{m.get('critical_f1', 'N/A')}"),
+            html.Td(f"{lat.get('latency_ms', 'N/A')}"),
+            html.Td(f"{lat.get('size_mb', 'N/A')}"),
         ]))
     return dbc.Table(
         [html.Thead(html.Tr([
@@ -1317,7 +1452,7 @@ def model_result_card(model_name: str, probs_dict: dict, elapsed_ms: float) -> h
     if not probs_dict:
         return dbc.Alert(
             [
-                html.B(model_name), " — model not available. ",
+                html.B(model_name), ": model not available. ",
                 html.Span("Run python download_models.py to download model weights.",
                           style={"fontSize": "0.85em"}),
             ],
@@ -1361,7 +1496,7 @@ def _live_model_block(model_name: str, probs_dict: dict, elapsed_ms: float,
     """Full card for the Live Test panel: prediction bar + Phase-2 per-model comparison."""
     if not probs_dict:
         return dbc.Alert(
-            [html.B(model_name), " — model not available. ",
+            [html.B(model_name), ": model not available. ",
              html.Span("Run python download_models.py to download model weights.",
                        style={"fontSize": "0.85em"})],
             color="warning", style={"marginBottom": "20px"},
@@ -1374,7 +1509,7 @@ def _live_model_block(model_name: str, probs_dict: dict, elapsed_ms: float,
     if comparison_text is None:
         if not GROQ_PKG_OK:
             cmp_node = html.P(
-                "groq package not installed — run: pip install groq",
+                "groq package not installed - run: pip install groq",
                 style={"color": "#94a3b8", "fontSize": "0.85rem",
                        "fontStyle": "italic", "margin": 0},
             )
@@ -1481,131 +1616,271 @@ def _stat_card(value, label, color="#00d4ff"):
     ], className="stat-badge")
 
 
+# ── GitHub Octocat icon (official GitHub mark, Base64 SVG data URI) ──────────
+_github_svg = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 96"'
+    ' width="24" height="24">'
+    '<path fill="#94a3b8" fill-rule="evenodd" clip-rule="evenodd" d="'
+    'M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69'
+    ' 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127'
+    '-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17'
+    '-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052'
+    ' 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6'
+    '-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2'
+    '-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052'
+    ' a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63'
+    ' 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038'
+    ' 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283'
+    ' 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526'
+    ' 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691'
+    'C97.707 22 75.788 0 48.854 0z"/></svg>'
+)
+_github_icon_uri = (
+    "data:image/svg+xml;base64,"
+    + base64.b64encode(_github_svg.encode()).decode()
+)
+_GITHUB_MEMBERS = [
+    ("Mirko Dervishi",  "https://github.com/Mirko-hubgit"),
+    ("Matteo Gerevini", "https://github.com/00gerem00"),
+    ("Andrea Grulla",   "https://github.com/grullaandrea-png"),
+    ("Lorenzo Meroni",  "https://github.com/lorenzomeroni02"),
+]
+
 home_content = dbc.Container([
-    # Hero banner
-    html.Div([
-        dbc.Row([
-            dbc.Col([
-                html.H1("ARTEMIS II", style={
-                    "fontSize": "2.4rem", "fontWeight": "800",
-                    "background": "linear-gradient(90deg,#00d4ff,#7c3aed)",
-                    "-webkit-background-clip": "text",
-                    "-webkit-text-fill-color": "transparent",
-                    "marginBottom": "0",
-                }),
-                html.H2("Tweet Sentiment Analysis", style={
-                    "fontSize": "1.3rem", "color": "#cbd5e1",
-                    "fontWeight": "400", "marginBottom": "20px",
-                }),
-                html.P([
-                    "A natural language processing study of public opinion on ",
-                    html.B("NASA's Artemis II mission"),
-                    ", the first crewed lunar flyby since Apollo 17 (April 2026). "
-                    "The project collects, annotates, and classifies Twitter/X posts "
-                    "into four sentiment categories using five NLP models ranging from "
-                    "Neural-Networks to large pre-trained Transformers.",
-                ], style={"color": "#e2e8f0", "lineHeight": "1.7", "maxWidth": "720px"}),
-                html.Div([
-                    html.Span("DATAUNDERDOGS", style={
-                        "color": "#ffd700", "fontWeight": "600", "fontSize": "0.9rem",
-                    }),
-                    html.Span(
-                        "  ·  MIRKO DERVISHI · MATTEO GEREVINI · ANDREA GRULLA · LORENZO MERONI",
-                        style={"color": "#94a3b8", "fontSize": "0.88rem"},
-                    ),
-                ], style={"marginTop": "12px"}),
-            ], width=12),
-        ]),
-    ], className="hero-banner"),
-
-    # Stats row
-    dbc.Row([
-        dbc.Col(_stat_card("6,624", "Annotated Tweets"), width=2),
-        dbc.Col(_stat_card("4", "Sentiment Classes"), width=2),
-        dbc.Col(_stat_card("5", "NLP Models"), width=2),
-        dbc.Col(_stat_card("77.0%", "Best Macro F1\n(DeBERTa-v3)", "#7c3aed"), width=2),
-        dbc.Col(_stat_card("88.7 ms", "Fastest Inference\n(DistilBERT)", "#22c55e"), width=2),
-        dbc.Col(_stat_card("14.9 MB", "Smallest Model\n(BiLSTM)", "#f97316"), width=2),
-    ], className="mb-4"),
-
-    # Sentiment classes
+    # ── Header: title + GitHub icon ──────────────────────────────────────────
     dbc.Row([
         dbc.Col([
-            html.Div("Sentiment Classes", className="section-header"),
+            html.Div([
+                html.H1(
+                    "ARTEMIS II - DATAUNDERDOGS",
+                    style={
+                        "fontSize": "2.2rem", "fontWeight": "800",
+                        "letterSpacing": "0.02em", "color": "#e2e8f0",
+                        "marginBottom": "0", "marginRight": "14px",
+                    },
+                ),
+                html.Span([
+                    html.Button(
+                        html.Img(
+                            src=_github_icon_uri,
+                            style={"width": "26px", "height": "26px",
+                                   "verticalAlign": "middle"},
+                        ),
+                        id="home-github-btn",
+                        n_clicks=0,
+                        title="Team GitHub profiles",
+                        style={
+                            "background": "none", "border": "none",
+                            "cursor": "pointer", "padding": "4px",
+                            "lineHeight": "1",
+                        },
+                    ),
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader(
+                                dbc.ModalTitle(
+                                    "DATAUNDERDOGS",
+                                    style={"color": "#00d4ff", "fontWeight": "700",
+                                           "letterSpacing": "0.06em",
+                                           "fontSize": "1rem"},
+                                ),
+                                close_button=True,
+                                style={"background": "#0f1629",
+                                       "borderBottom": "1px solid #1e3a5f"},
+                            ),
+                            dbc.ModalBody(
+                                html.Ul([
+                                    html.Li(
+                                        html.A(
+                                            name, href=url, target="_blank",
+                                            style={"color": "#94a3b8",
+                                                   "textDecoration": "none",
+                                                   "fontSize": "0.95rem"},
+                                        ),
+                                        style={"padding": "6px 0",
+                                               "listStyle": "none"},
+                                    )
+                                    for name, url in _GITHUB_MEMBERS
+                                ], style={"padding": "0", "margin": "0"}),
+                                style={"background": "#0f1629"},
+                            ),
+                        ],
+                        id="github-members-modal",
+                        is_open=False,
+                        size="sm",
+                        keyboard=True,
+                        backdrop=True,
+                    ),
+                ]),
+            ], style={"display": "flex", "alignItems": "center",
+                      "flexWrap": "wrap", "gap": "4px"}),
+            html.P(
+                "Tweet Sentiment Analysis",
+                style={"color": "#94a3b8", "fontSize": "1.05rem",
+                       "fontWeight": "400", "marginTop": "6px",
+                       "marginBottom": "0"},
+            ),
+        ], width=12),
+    ], className="mb-5",
+       style={"borderBottom": "1px solid #1e3a5f", "paddingBottom": "28px"}),
+
+    # ── About Artemis II ──────────────────────────────────────────────────────
+    dbc.Row([
+        dbc.Col([
+            html.Div("About Artemis II", className="section-header"),
+            html.P(
+                "The Artemis program is NASA's effort to return humans to the Moon "
+                "and build a sustained lunar presence as a stepping stone toward Mars. "
+                "Artemis II (April 1-11, 2026) was the first crewed mission of the "
+                "Artemis program: a crewed lunar flyby, the first crewed flight beyond "
+                "low Earth orbit since Apollo 17 (1972), and the first crewed flight of "
+                "the SLS rocket and the Orion spacecraft (named Integrity). It launched "
+                "on April 1, 2026 from Kennedy Space Center (Florida) and splashed down "
+                "in the Pacific Ocean on April 10, 2026, an approximately 10-day mission.",
+                style={"color": "#e2e8f0", "lineHeight": "1.75",
+                       "marginBottom": "14px"},
+            ),
+            html.P(
+                "The crew comprised commander Reid Wiseman, pilot Victor Glover, and "
+                "mission specialists Christina Koch and Jeremy Hansen (CSA). The main "
+                "goal was to validate Orion's systems, life-support, crew operations, "
+                "and procedures ahead of future crewed lunar missions. As a milestone, "
+                "it carried the first astronauts to the Moon's vicinity since 1972, and "
+                "the crew set the record for the farthest humans have traveled from Earth "
+                "(approximately 406,771 km), surpassing Apollo 13.",
+                style={"color": "#e2e8f0", "lineHeight": "1.75",
+                       "marginBottom": "14px"},
+            ),
+            html.P(
+                "Its key phases were launch (Apr 1), trans-lunar injection (Apr 2), a "
+                "lunar flyby approximately 6,545 km from the Moon (Apr 6) with roughly "
+                "40 minutes of far-side signal blackout, and splashdown (Apr 10), "
+                "following a free-return figure-eight trajectory.",
+                style={"color": "#e2e8f0", "lineHeight": "1.75",
+                       "marginBottom": "0"},
+            ),
+        ], width=12),
+    ], className="mb-5"),
+
+    # ── Team + Dataset ────────────────────────────────────────────────────────
+    dbc.Row([
+        dbc.Col([
+            html.Div("The Team", className="section-header"),
+            html.P(
+                "Mirko Dervishi, Matteo Gerevini, Andrea Grulla, Lorenzo Meroni",
+                style={"color": "#e2e8f0", "fontSize": "1rem", "lineHeight": "1.6"},
+            ),
+        ], md=4, className="mb-4"),
+        dbc.Col([
+            html.Div("Dataset", className="section-header"),
+            html.P(
+                "6,624 annotated tweets, split by stratified sampling "
+                "(class proportions preserved across all splits):",
+                style={"color": "#e2e8f0", "lineHeight": "1.7",
+                       "marginBottom": "10px"},
+            ),
+            dbc.Table(
+                [
+                    html.Thead(
+                        html.Tr([
+                            html.Th("Split"), html.Th("Tweets"), html.Th("Share"),
+                        ]),
+                        style={"color": "#00d4ff"},
+                    ),
+                    html.Tbody([
+                        html.Tr([html.Td("Train"),      html.Td("4,636"), html.Td("70%")]),
+                        html.Tr([html.Td("Validation"), html.Td("993"),   html.Td("15%")]),
+                        html.Tr([html.Td("Test"),       html.Td("994"),   html.Td("15%")]),
+                    ]),
+                ],
+                bordered=True, size="sm",
+                className="table-dark",
+                style={"maxWidth": "300px", "fontSize": "0.88rem"},
+            ),
+        ], md=8, className="mb-4"),
+    ]),
+
+    # ── Sentiment categories ──────────────────────────────────────────────────
+    dbc.Row([
+        dbc.Col([
+            html.Div("Sentiment Categories", className="section-header"),
             dbc.Row([
-                dbc.Col(dbc.Card([
-                    dbc.CardHeader("Enthusiastic",
-                                   style={"color": "#22c55e", "fontWeight": "700"}),
-                    dbc.CardBody("Positive, excited reactions to the mission. "
-                                 "Often expressed through exclamatory language. "
-                                 "(43.2% of dataset)"),
-                ], style={"borderLeft": "3px solid #22c55e"}), width=3),
-                dbc.Col(dbc.Card([
-                    dbc.CardHeader("Neutral",
-                                   style={"color": "#3b82f6", "fontWeight": "700"}),
-                    dbc.CardBody("Informational, news-style reporting. Factual descriptions "
-                                 "of mission events without strong opinion. "
-                                 "(38.5% of dataset)"),
-                ], style={"borderLeft": "3px solid #3b82f6"}), width=3),
-                dbc.Col(dbc.Card([
-                    dbc.CardHeader("Critical / Skeptical",
-                                   style={"color": "#f97316", "fontWeight": "700"}),
-                    dbc.CardBody("Questioning the mission's value, cost, or operational "
-                                 "execution. Practical doubts, not denial. "
-                                 "(9.8% of dataset)"),
-                ], style={"borderLeft": "3px solid #f97316"}), width=3),
-                dbc.Col(dbc.Card([
-                    dbc.CardHeader("Conspiratorial",
-                                   style={"color": "#ef4444", "fontWeight": "700"}),
-                    dbc.CardBody("Denying the mission's authenticity using hoax narratives "
-                                 "(fake, CGI, green screen, flat earth). "
-                                 "(8.5% of dataset)"),
-                ], style={"borderLeft": "3px solid #ef4444"}), width=3),
+                dbc.Col(
+                    html.Div([
+                        html.Span("Conspiratorial",
+                                  style={"fontWeight": "700", "color": "#ef4444",
+                                         "fontSize": "0.95rem"}),
+                        html.P("Sentiment that denies the mission's authenticity, "
+                               "framing it as staged or fabricated.",
+                               style={"color": "#94a3b8", "fontSize": "0.88rem",
+                                      "lineHeight": "1.5", "marginTop": "6px",
+                                      "marginBottom": "0"}),
+                    ], style={**CARD_STYLE, "borderLeft": "3px solid #ef4444"}),
+                    md=3, className="mb-3",
+                ),
+                dbc.Col(
+                    html.Div([
+                        html.Span("Critical/Skeptical",
+                                  style={"fontWeight": "700", "color": "#f97316",
+                                         "fontSize": "0.95rem"}),
+                        html.P("Sentiment that questions the mission's value, cost, "
+                               "or execution with practical criticism.",
+                               style={"color": "#94a3b8", "fontSize": "0.88rem",
+                                      "lineHeight": "1.5", "marginTop": "6px",
+                                      "marginBottom": "0"}),
+                    ], style={**CARD_STYLE, "borderLeft": "3px solid #f97316"}),
+                    md=3, className="mb-3",
+                ),
+                dbc.Col(
+                    html.Div([
+                        html.Span("Enthusiastic",
+                                  style={"fontWeight": "700", "color": "#22c55e",
+                                         "fontSize": "0.95rem"}),
+                        html.P("Positive sentiment expressing excitement or "
+                               "strong support for the mission.",
+                               style={"color": "#94a3b8", "fontSize": "0.88rem",
+                                      "lineHeight": "1.5", "marginTop": "6px",
+                                      "marginBottom": "0"}),
+                    ], style={**CARD_STYLE, "borderLeft": "3px solid #22c55e"}),
+                    md=3, className="mb-3",
+                ),
+                dbc.Col(
+                    html.Div([
+                        html.Span("Neutral",
+                                  style={"fontWeight": "700", "color": "#3b82f6",
+                                         "fontSize": "0.95rem"}),
+                        html.P("Informational or news-style sentiment with no "
+                               "strong positive or negative stance.",
+                               style={"color": "#94a3b8", "fontSize": "0.88rem",
+                                      "lineHeight": "1.5", "marginTop": "6px",
+                                      "marginBottom": "0"}),
+                    ], style={**CARD_STYLE, "borderLeft": "3px solid #3b82f6"}),
+                    md=3, className="mb-3",
+                ),
             ]),
         ], width=12),
-    ], className="mb-4"),
+    ], className="mb-5"),
 
-    # Data collection
+    # ── Data collection + Models ──────────────────────────────────────────────
     dbc.Row([
         dbc.Col([
             html.Div("Data Collection", className="section-header"),
-            dbc.Row([
-                dbc.Col([
-                    html.P("Tweets were scraped from Twitter/X using Apify scrapers across "
-                           "five targeted collection windows:", style={"color": "#e2e8f0"}),
-                    html.Ul([
-                        html.Li([html.Span("Departure ", style={"color": "#a78bfa", "fontWeight": "600"}),
-                                 ": Apr 01–03, 2026"]),
-                        html.Li([html.Span("Photo Day ", style={"color": "#a78bfa", "fontWeight": "600"}),
-                                 ": Apr 03–05 (supplemental)"]),
-                        html.Li([html.Span("Flyby ", style={"color": "#00d4ff", "fontWeight": "600"}),
-                                 ": Apr 06–08, 2026"]),
-                        html.Li([html.Span("Return ", style={"color": "#22c55e", "fontWeight": "600"}),
-                                 ": Apr 10–12, 2026"]),
-                        html.Li([html.Span("Conspiracy Hunt ", style={"color": "#ef4444", "fontWeight": "600"}),
-                                 ": targeted keyword scrape (supplemental)"]),
-                    ], style={"color": "#94a3b8", "lineHeight": "1.9"}),
-                    html.P([
-                        "Filters applied: ", html.Code("lang:en"), ", ",
-                        html.Code("-filter:retweets"), ", ",
-                        html.Code("-filter:media"), ".",
-                    ], style={"color": "#94a3b8", "fontSize": "0.9em"}),
-                ], width=6),
-                dbc.Col([
-                    html.P("Models evaluated:", style={"color": "#e2e8f0", "fontWeight": "600"}),
-                    html.Ul([
-                        html.Li("BiLSTM  (GloVe embeddings, Keras)"),
-                        html.Li("ULMFiT  (AWD-LSTM, fastai)"),
-                        html.Li("DistilBERT  (fine-tuned, HuggingFace)"),
-                        html.Li("RoBERTa  (fine-tuned, HuggingFace)"),
-                        html.Li("DeBERTa-v3  (fine-tuned, HuggingFace)"),
-                    ], style={"color": "#94a3b8", "lineHeight": "1.9"}),
-                    html.P("Evaluation metric: Macro F1 (all four classes weighted equally).",
-                           style={"color": "#94a3b8", "fontSize": "0.9em"}),
-                ], width=6),
-            ]),
-        ], width=12),
-    ]),
+            html.P(
+                "Tweets were scraped from X (Twitter) using Apify scrapers "
+                "across 5 targeted collection windows.",
+                style={"color": "#e2e8f0", "lineHeight": "1.7"},
+            ),
+        ], md=6),
+        dbc.Col([
+            html.Div("Models", className="section-header"),
+            html.Ul(
+                [html.Li(m, style={"color": "#e2e8f0", "padding": "3px 0"})
+                 for m in ["BiLSTM", "ULMFiT", "DistilBERT",
+                           "RoBERTa", "DeBERTa-v3"]],
+                style={"paddingLeft": "18px", "listStyleType": "disc"},
+            ),
+        ], md=6),
+    ], className="mb-4"),
 ], fluid=True, style={"paddingBottom": "40px"})
 
 
@@ -1635,19 +1910,26 @@ if df_master is not None:
         for c in ["Sentiment_label", "source", "text", "cleaned_text"]
         if c in df_master.columns
     ]
-    # Stratified sample: up to 100 rows per source → guarantees all 5 sources are
-    # represented, total ≤ 500 rows, shuffled with a fixed seed for reproducibility.
-    _tbl_frames = [
-        grp.sample(n=min(len(grp), 100), random_state=42)
-        for _, grp in df_master.groupby("source")
-    ] if "source" in df_master.columns else [df_master.sample(n=min(500, len(df_master)), random_state=42)]
+    # Class-quota stratified sample: fixed quotas per sentiment class (minority
+    # classes intentionally oversampled for exploration; source not used).
+    _cls_quotas = {
+        "Enthusiastic":       175,
+        "Neutral":            175,
+        "Critical/Skeptical": 75,
+        "Conspiratorial":     75,
+    }
+    _tbl_frames = []
+    for _cls, _quota in _cls_quotas.items():
+        _grp = df_master[df_master["Sentiment_label"] == _cls]
+        if len(_grp) > 0:
+            _tbl_frames.append(_grp.sample(n=min(len(_grp), _quota), random_state=42))
     tbl_data = (
         pd.concat(_tbl_frames)
         .sample(frac=1, random_state=42)
         .reset_index(drop=True)
         [[c["id"] for c in tbl_columns]]
         .to_dict("records")
-    )
+    ) if _tbl_frames else []
 else:
     tbl_columns, tbl_data = [], []
 
@@ -1664,20 +1946,14 @@ dataset_content = dbc.Container([
         ]),
         dbc.Tab(label="Cleaned Dataset", tab_id="dp-data", children=[
             html.Div(style={"height": "16px"}),
-            html.Div("Cleaned Master Dataset — random 500-tweet sample (all sources)",
-                     className="section-header"),
-            dbc.Alert(
-                [
-                    f"Random stratified sample of up to 500 tweets drawn from all 5 sources "
-                    f"(≤ 100 per source, fixed seed=42). "
-                    f"Total dataset: {len(df_master):,} tweets. "
-                    "Use column header filters to search. ",
-                    html.B("Click any row to read the full tweet text."),
-                ]
-                if df_master is not None else
-                "Dataset not found at data/processed/artemis_master_dataset.csv.",
-                color="info", style={"fontSize": "0.85rem"},
-            ),
+            html.Div([
+                html.H5("MASTER DATASET",
+                        style={"color": "#00d4ff", "fontWeight": "700",
+                               "letterSpacing": "0.08em", "marginBottom": "2px"}),
+                html.P("random 500-tweet sample",
+                       style={"color": "#94a3b8", "fontSize": "0.88rem",
+                              "marginBottom": "14px"}),
+            ]),
             dash_table.DataTable(
                 id="master-table",
                 columns=tbl_columns,
@@ -1722,7 +1998,42 @@ dataset_content = dbc.Container([
                      "backgroundColor": "#1a2540", "border": "1px solid #00d4ff"},
                 ],
             ),
-            html.Div(id="master-table-detail", style={"marginTop": "12px"}),
+            dbc.Modal(
+                [
+                    dbc.ModalHeader(
+                        dbc.ModalTitle(
+                            "Tweet Detail",
+                            style={"color": "#e2e8f0", "fontWeight": "700"},
+                        ),
+                        close_button=False,
+                        style={"background": "#0f1629",
+                               "borderBottom": "1px solid #1e3a5f"},
+                    ),
+                    dbc.ModalBody(
+                        id="tweet-detail-modal-body",
+                        style={"background": "#0a0f1e"},
+                    ),
+                    dbc.ModalFooter(
+                        dbc.Button(
+                            "Close",
+                            id="tweet-modal-close",
+                            size="sm",
+                            outline=True,
+                            n_clicks=0,
+                            style={"color": "#94a3b8",
+                                   "borderColor": "#1e3a5f"},
+                        ),
+                        style={"background": "#0f1629",
+                               "borderTop": "1px solid #1e3a5f",
+                               "justifyContent": "flex-end"},
+                    ),
+                ],
+                id="tweet-detail-modal",
+                is_open=False,
+                size="xl",
+                scrollable=True,
+                keyboard=True,
+            ),
         ]),
     ], id="dataset-inner-tabs", active_tab="dp-prep"),
 ], fluid=True, style={"paddingBottom": "40px"})
@@ -1821,7 +2132,7 @@ def _model_report_section(model_name: str) -> html.Div:
             "Ensure results/{bilstm,ulmfit,transformers}/probs_*.npy are present.",
             color="warning",
         )
-    fig_cm = confusion_matrix_fig(m["cm"], CLASSES, f"{model_name} — Confusion Matrix")
+    fig_cm = confusion_matrix_fig(m["cm"], CLASSES, f"{model_name} - Confusion Matrix")
     report_tbl = classification_report_table(m["report"])
     badge = html.Span(
         f"Macro F1: {m['macro_f1']:.4f}",
@@ -1839,7 +2150,7 @@ def _model_report_section(model_name: str) -> html.Div:
             dbc.Col(dcc.Graph(figure=fig_cm, config={"displayModeBar": False}), width=12, lg=8),
         ]),
         html.Hr(style={"borderColor": "#1e3a5f"}),
-    ])
+    ], id=f"model-section-{model_name}")
 
 
 # ── Balanced 100-tweet inference batch (fixed seed, reproducible) ─────────────
@@ -1887,7 +2198,7 @@ if df_test is not None:
                 for i, row in _inference_batch.iterrows()
             ]
             print(
-                f"[startup] Inference batch: {len(_inference_batch)} tweets — "
+                f"[startup] Inference batch: {len(_inference_batch)} tweets: "
                 + ", ".join(
                     f"{cls}={(_inference_batch['label'] == cls).sum()}"
                     for cls in _minority_cls + _majority_cls
@@ -1906,6 +2217,22 @@ models_content = dbc.Container([
                 "No model weights are loaded for this display.",
                 color="info", style={"fontSize": "0.85rem"},
             ),
+            html.Div(
+                [
+                    dbc.Button(
+                        name, id=f"jump-{name}", n_clicks=0, size="sm",
+                        style={
+                            "marginRight": "8px", "marginBottom": "4px",
+                            "background": "rgba(0,212,255,0.08)",
+                            "border": "1px solid rgba(0,212,255,0.3)",
+                            "color": "#00d4ff", "fontWeight": "600",
+                            "fontSize": "0.8rem", "letterSpacing": "0.03em",
+                        },
+                    )
+                    for name in ["BiLSTM", "ULMFiT"]
+                ],
+                style={"marginBottom": "18px"},
+            ),
             _model_report_section("BiLSTM"),
             _model_report_section("ULMFiT"),
         ]),
@@ -1917,6 +2244,22 @@ models_content = dbc.Container([
                 "Metrics recomputed from saved probability files (probs_*.npy) via scikit-learn. "
                 "No model weights are loaded for this display.",
                 color="info", style={"fontSize": "0.85rem"},
+            ),
+            html.Div(
+                [
+                    dbc.Button(
+                        name, id=f"jump-{name}", n_clicks=0, size="sm",
+                        style={
+                            "marginRight": "8px", "marginBottom": "4px",
+                            "background": "rgba(0,212,255,0.08)",
+                            "border": "1px solid rgba(0,212,255,0.3)",
+                            "color": "#00d4ff", "fontWeight": "600",
+                            "fontSize": "0.8rem", "letterSpacing": "0.03em",
+                        },
+                    )
+                    for name in ["DistilBERT", "RoBERTa", "DeBERTa-v3"]
+                ],
+                style={"marginBottom": "18px"},
             ),
             _model_report_section("DistilBERT"),
             _model_report_section("RoBERTa"),
@@ -2137,7 +2480,7 @@ live_test_content = dbc.Container([
 app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.CYBORG],
-    title="ARTEMIS II Dashboard",
+    title="ARTEMIS II",
     suppress_callback_exceptions=True,
 )
 server = app.server
@@ -2145,20 +2488,8 @@ server = app.server
 _navbar = dbc.Navbar(
     dbc.Container([
         dbc.NavbarBrand(
-            html.Span([_moon_icon, "ARTEMIS II · Sentiment Dashboard"]),
+            html.Span([_moon_icon, "ARTEMIS II"]),
             href="#",
-        ),
-        dbc.NavbarToggler(id="navbar-toggler"),
-        dbc.Collapse(
-            dbc.Nav([
-                dbc.NavItem(dbc.NavLink(
-                    "GitHub",
-                    href="https://github.com/00gerem00/ARTEMIS_Sentiment_Analysis",
-                    target="_blank",
-                    style={"color": "#94a3b8"},
-                )),
-            ], navbar=True),
-            id="navbar-collapse", navbar=True,
         ),
     ], fluid=True),
     color="dark", dark=True, sticky="top",
@@ -2166,6 +2497,33 @@ _navbar = dbc.Navbar(
 
 app.layout = html.Div([
     _navbar,
+    html.Div(
+        [
+            html.Div(
+                "Università Cattolica del Sacro Cuore",
+                style={"fontWeight": "600", "color": "#e2e8f0",
+                       "fontSize": "0.72rem", "lineHeight": "1.4",
+                       "letterSpacing": "0.01em"},
+            ),
+            html.Div(
+                "Text Mining and Data Visualization",
+                style={"color": "#94a3b8", "fontSize": "0.65rem",
+                       "letterSpacing": "0.01em"},
+            ),
+        ],
+        style={
+            "position": "fixed",
+            "top": "62px",
+            "right": "14px",
+            "zIndex": "100",
+            "textAlign": "right",
+            "pointerEvents": "none",
+            "background": "rgba(8,9,26,0.75)",
+            "borderRadius": "4px",
+            "padding": "4px 8px",
+            "border": "1px solid rgba(30,58,95,0.6)",
+        },
+    ),
     dbc.Container([
         html.Div(style={"height": "16px"}),
         dbc.Tabs([
@@ -2194,14 +2552,55 @@ app.layout = html.Div([
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
-    Output("master-table-detail", "children"),
+    Output("github-members-modal", "is_open"),
+    Input("home-github-btn", "n_clicks"),
+    State("github-members-modal", "is_open"),
+    prevent_initial_call=True,
+)
+def toggle_github_modal(n_clicks, is_open):
+    if n_clicks:
+        return True
+    return is_open
+
+
+app.clientside_callback(
+    """
+    function(n1, n2, n3, n4, n5) {
+        var ctx = window.dash_clientside.callback_context;
+        if (!ctx || !ctx.triggered || !ctx.triggered.length) {
+            return [null, null, null, null, null];
+        }
+        var triggerId = ctx.triggered[0].prop_id.split('.')[0];
+        var targetId = 'model-section-' + triggerId.replace('jump-', '');
+        var el = document.getElementById(targetId);
+        if (el) { el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+        return [null, null, null, null, null];
+    }
+    """,
+    [Output(f"jump-{m}", "n_clicks") for m in MODEL_NAMES],
+    [Input(f"jump-{m}", "n_clicks") for m in MODEL_NAMES],
+    prevent_initial_call=True,
+)
+
+
+@app.callback(
+    Output("tweet-detail-modal", "is_open"),
+    Output("tweet-detail-modal-body", "children"),
+    Output("master-table", "active_cell"),
     Input("master-table", "active_cell"),
+    Input("tweet-modal-close", "n_clicks"),
     State("master-table", "derived_virtual_data"),
     prevent_initial_call=True,
 )
-def show_tweet_detail(active_cell, rows):
+def handle_tweet_modal(active_cell, close_clicks, rows):
+    ctx = callback_context
+    if not ctx.triggered:
+        return False, no_update, no_update
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if trigger_id == "tweet-modal-close":
+        return False, no_update, no_update
     if active_cell is None or not rows:
-        return html.Div()
+        return False, no_update, no_update
     row = rows[active_cell["row"]]
     label    = str(row.get("Sentiment_label", ""))
     source   = str(row.get("source", ""))
@@ -2213,33 +2612,31 @@ def show_tweet_detail(active_cell, rows):
         "Critical/Skeptical": "#f97316",
         "Conspiratorial":     "#ef4444",
     }.get(label, "#e2e8f0")
-    _pre = lambda text: html.Pre(
-        text,
-        style={
-            "color": "#e2e8f0",
-            "background": "#111827",
-            "border": "1px solid #1e3a5f",
-            "borderRadius": "6px",
-            "padding": "12px 14px",
-            "fontSize": "0.84rem",
-            "lineHeight": "1.65",
-            "whiteSpace": "pre-wrap",
-            "wordBreak": "break-word",
-            "margin": 0,
-            "minHeight": "60px",
-        },
-    )
-    return html.Div([
-        dbc.Row([
-            dbc.Col(
-                html.Span([
-                    html.Span(label, style={"color": label_color, "fontWeight": "700"}),
-                    html.Span(f"  ·  {source}", style={"color": "#94a3b8"}),
-                ]),
-                width=12,
-                style={"marginBottom": "8px"},
-            ),
-        ]),
+    def _pre(text):
+        return html.Pre(
+            text,
+            style={
+                "color": "#e2e8f0",
+                "background": "#111827",
+                "border": "1px solid #1e3a5f",
+                "borderRadius": "6px",
+                "padding": "12px 14px",
+                "fontSize": "0.84rem",
+                "lineHeight": "1.65",
+                "whiteSpace": "pre-wrap",
+                "wordBreak": "break-word",
+                "margin": 0,
+                "minHeight": "60px",
+            },
+        )
+    body = html.Div([
+        html.Div(
+            html.Span([
+                html.Span(label, style={"color": label_color, "fontWeight": "700"}),
+                html.Span(f"  -  {source}", style={"color": "#94a3b8"}),
+            ]),
+            style={"marginBottom": "14px"},
+        ),
         dbc.Row([
             dbc.Col([
                 html.Div("Original", style={
@@ -2256,15 +2653,10 @@ def show_tweet_detail(active_cell, rows):
                     "marginBottom": "5px",
                 }),
                 _pre(cleaned),
-            ], width=12, lg=6, style={"marginTop": "12px" if True else "0"}),
+            ], width=12, lg=6, style={"marginTop": "12px"}),
         ]),
-    ], style={
-        "background": "#0a0f1e",
-        "border": "1px solid #1e3a5f",
-        "borderLeft": f"3px solid {label_color}",
-        "borderRadius": "8px",
-        "padding": "14px 16px",
-    })
+    ])
+    return True, body, None
 
 
 @app.callback(
@@ -2378,8 +2770,8 @@ def render_ling_content(active_tab):
 
     stats = [
         ("Total Sentences",
-         f"{nlp_cache.get('total_sentences', '—'):,}"
-         if isinstance(nlp_cache.get("total_sentences"), int) else "—"),
+         f"{nlp_cache.get('total_sentences', 0):,}"
+         if isinstance(nlp_cache.get("total_sentences"), int) else "N/A"),
         ("Avg Sentences / Tweet", f"{nlp_cache.get('sents_per_doc_mean', 0):.1f}"),
         ("Avg Tokens / Sentence", f"{nlp_cache.get('sent_length_mean', 0):.1f}"),
     ]

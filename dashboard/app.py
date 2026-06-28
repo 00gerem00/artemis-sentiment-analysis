@@ -59,13 +59,7 @@ try:
 except ImportError:
     SPACY_OK = False
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv(Path(__file__).parent / ".env")
-except ImportError:
-    pass
-
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")   # env fallback; runtime key preferred
+GROQ_API_KEY = ""   # key comes exclusively from the runtime password field; never from env/.env
 GROQ_MODEL      = "llama-3.1-8b-instant"               # swap model name here if needed
 LLM_TEMPERATURE = 0.2
 LLM_MAX_TOKENS  = 120
@@ -313,34 +307,21 @@ def make_label_dist_fig():
     pcts   = (counts / total * 100).round(1)
     colors = [CLASS_COLORS[c] for c in CLASSES]
 
-    fig = make_subplots(
-        rows=1, cols=2,
-        specs=[[{"type": "bar"}, {"type": "pie"}]],
-        subplot_titles=["Count per Class", "Share (%)"],
-    )
-    fig.add_trace(
-        go.Bar(
-            x=CLASSES, y=counts.values,
-            marker_color=colors,
-            text=[f"{v}<br>({p}%)" for v, p in zip(counts.values, pcts.values)],
-            textposition="outside",
-            name="Count",
-        ), row=1, col=1
-    )
-    fig.add_trace(
-        go.Pie(
-            labels=CLASSES, values=counts.values,
-            marker_colors=colors,
-            hole=0.4,
-            textinfo="label+percent",
-            showlegend=False,
-        ), row=1, col=2
-    )
+    fig = go.Figure(go.Bar(
+        x=CLASSES, y=counts.values,
+        marker_color=colors,
+        text=[f"{v}  ({p:.1f}%)" for v, p in zip(counts.values, pcts.values)],
+        textposition="outside",
+        name="Count",
+    ))
+    y_max = int(counts.max())
     fig.update_layout(
         template=PLOTLY_TEMPLATE, paper_bgcolor="#0f1629", plot_bgcolor="#0f1629",
-        height=380, margin=dict(t=40, b=10, l=10, r=10),
+        height=390, margin=dict(t=70, b=30, l=70, r=30),
         showlegend=False,
-        title_text="Overall Sentiment Distribution  (N = {:,})".format(total),
+        title_text="Sentiment Distribution (N = {:,})".format(total),
+        yaxis=dict(title="Count", range=[0, y_max * 1.25]),
+        xaxis=dict(title="Sentiment Class"),
     )
     return fig
 
@@ -349,19 +330,21 @@ def make_phase_fig():
     if df_eda is None:
         return _empty_fig()
     phases = {
-        "departure": "1 · Departure",
-        "flyby":     "2 · Flyby",
-        "return":    "3 · Return",
+        "departure": "1 - Departure",
+        "flyby":     "2 - Flyby",
+        "return":    "3 - Return",
     }
     fig = make_subplots(
         rows=1, cols=3,
         subplot_titles=list(phases.values()),
         shared_yaxes=False,
     )
-    for col, (phase, title) in enumerate(phases.items(), start=1):
+    col_maxes = []
+    for col, (phase, _title) in enumerate(phases.items(), start=1):
         sub = df_eda[df_eda["source"] == phase]
         counts = sub["Sentiment_label"].value_counts().reindex(CLASSES, fill_value=0)
         total  = counts.sum()
+        col_maxes.append(int(counts.max()) if total else 1)
         for cls, val in zip(CLASSES, counts.values):
             pct = (val / total * 100) if total else 0
             fig.add_trace(
@@ -370,16 +353,19 @@ def make_phase_fig():
                     name=cls, legendgroup=cls,
                     showlegend=(col == 1),
                     marker_color=CLASS_COLORS[cls],
-                    text=[f"{val}<br>{pct:.1f}%"],
+                    text=[f"{pct:.1f}%"],
                     textposition="outside",
                 ),
                 row=1, col=col,
             )
+    # 30% headroom above the tallest bar in each panel so labels never clip
+    for c in range(1, 4):
+        fig.update_yaxes(range=[0, col_maxes[c - 1] * 1.3], row=1, col=c)
     fig.update_layout(
         template=PLOTLY_TEMPLATE, paper_bgcolor="#0f1629", plot_bgcolor="#0f1629",
-        height=400, margin=dict(t=50, b=10, l=10, r=10),
+        height=470, margin=dict(t=90, b=30, l=60, r=20),
         barmode="group", legend_title="Sentiment",
-        title_text="Sentiment by Mission Phase (Departure · Flyby · Return)",
+        title_text="Sentiment by Mission Phase",
     )
     fig.update_xaxes(tickangle=15, tickfont_size=10)
     return fig
@@ -398,8 +384,8 @@ def make_length_fig():
     fig = make_subplots(
         rows=1, cols=2,
         subplot_titles=[
-            "Text Length Distribution (Characters)",
-            "Word Count Distribution",
+            "Text Length (characters)",
+            "Word Count (words)",
         ],
     )
     fig.add_trace(
@@ -418,26 +404,26 @@ def make_length_fig():
     )
     fig.add_vline(
         x=char_median, line_dash="dash", line_color="#ffd700", line_width=2.5,
-        annotation_text=f"median = {char_median} chars",
+        annotation_text=f"median {char_median} chars",
         annotation_position="top right",
         annotation_font=dict(color="#ffd700", size=12),
         row=1, col=1,
     )
     fig.add_vline(
         x=word_median, line_dash="dash", line_color="#ffd700", line_width=2.5,
-        annotation_text=f"median = {word_median} words",
+        annotation_text=f"median {word_median} words",
         annotation_position="top right",
         annotation_font=dict(color="#ffd700", size=12),
         row=1, col=2,
     )
-    fig.update_xaxes(title_text="Character Count", row=1, col=1)
-    fig.update_xaxes(title_text="Word Count", row=1, col=2)
+    fig.update_xaxes(title_text="characters", row=1, col=1)
+    fig.update_xaxes(title_text="words", row=1, col=2)
     fig.update_yaxes(title_text="Frequency", row=1, col=1)
     fig.update_yaxes(title_text="Frequency", row=1, col=2)
     fig.update_layout(
         template=PLOTLY_TEMPLATE, paper_bgcolor="#0f1629", plot_bgcolor="#0f1629",
-        height=400, margin=dict(t=60, b=30, l=50, r=30),
-        title_text="Text Length Distributions  (entire cleaned dataset, N = {:,})".format(len(df)),
+        height=420, margin=dict(t=70, b=40, l=60, r=40),
+        title_text="Tweet Length Distributions",
     )
     return fig
 
@@ -492,7 +478,7 @@ def make_bigram_fig():
 
     fig = make_subplots(
         rows=2, cols=2,
-        subplot_titles=[f"Top Bigrams: {c}" for c in CLASSES],
+        subplot_titles=list(CLASSES),
         horizontal_spacing=0.15, vertical_spacing=0.2,
     )
     colorscales = ["Blues", "Greens", "Oranges", "Purples"]
@@ -609,8 +595,14 @@ def _compute_nlp_cache() -> dict:
 
     # Use df_eda (6,623 rows) to match notebook 02 cell-8
     texts = df_eda["cleaned_text"].fillna("").astype(str).tolist()
-    print(f"  [nlp] Processing {len(texts)} docs with spaCy…")
-    docs = list(nlp.pipe(texts, batch_size=128))
+    total = len(texts)
+    _nlp_progress["total"] = total
+    _nlp_progress["current"] = 0
+    print(f"  [nlp] Processing {total} docs with spaCy…")
+    docs = []
+    for _i, _doc in enumerate(nlp.pipe(texts, batch_size=128)):
+        docs.append(_doc)
+        _nlp_progress["current"] = _i + 1
 
     pos_counter = Counter()
     ner_counter = Counter()
@@ -685,8 +677,27 @@ nlp_cache = _load_nlp_cache()
 # spaCy NER processing is deferred: computed on first visit to the Linguistics & NER tab
 _nlp_spacy_computed = False   # True once _compute_nlp_cache() has run in this session
 _nlp_lock           = threading.Lock()
+_nlp_progress       = {"current": 0, "total": 6623, "done": False, "running": False}
 
 FIG_BIGRAM = make_bigram_fig()   # fallback (cleaned_text) until NER tab is first visited
+
+
+def _run_nlp_background() -> None:
+    global nlp_cache, _nlp_spacy_computed
+    _nlp_progress["current"] = 0
+    _nlp_progress["done"] = False
+    _nlp_progress["running"] = True
+    try:
+        result = _compute_nlp_cache()
+        with _nlp_lock:
+            if result:
+                nlp_cache = result
+            _nlp_spacy_computed = True
+    except Exception as _e:
+        print(f"  [nlp-thread] Error: {_e}")
+    finally:
+        _nlp_progress["running"] = False
+        _nlp_progress["done"] = True
 
 
 def make_pos_fig():
@@ -1774,7 +1785,7 @@ home_content = dbc.Container([
         dbc.Col([
             html.Div("Dataset", className="section-header"),
             html.P(
-                "6,624 annotated tweets, split by stratified sampling "
+                "6,623 annotated tweets, split by stratified sampling "
                 "(class proportions preserved across all splits):",
                 style={"color": "#e2e8f0", "lineHeight": "1.7",
                        "marginBottom": "10px"},
@@ -1868,8 +1879,30 @@ home_content = dbc.Container([
             html.P(
                 "Tweets were scraped from X (Twitter) using Apify scrapers "
                 "across 5 targeted collection windows.",
-                style={"color": "#e2e8f0", "lineHeight": "1.7"},
+                style={"color": "#e2e8f0", "lineHeight": "1.7", "marginBottom": "8px"},
             ),
+            html.Ul([
+                html.Li(
+                    [html.B("Departure"), " - Apr 1-2, 2026"],
+                    style={"color": "#94a3b8", "fontSize": "0.85rem", "padding": "2px 0"},
+                ),
+                html.Li(
+                    [html.B("Photo Day"), " (supplemental) - Apr 3-4, 2026"],
+                    style={"color": "#94a3b8", "fontSize": "0.85rem", "padding": "2px 0"},
+                ),
+                html.Li(
+                    [html.B("Flyby"), " - Apr 6-7, 2026"],
+                    style={"color": "#94a3b8", "fontSize": "0.85rem", "padding": "2px 0"},
+                ),
+                html.Li(
+                    [html.B("Return"), " - Apr 10-11, 2026"],
+                    style={"color": "#94a3b8", "fontSize": "0.85rem", "padding": "2px 0"},
+                ),
+                html.Li(
+                    [html.B("Conspiracy Hunt"), " (supplemental) - keyword-targeted, no date restriction"],
+                    style={"color": "#94a3b8", "fontSize": "0.85rem", "padding": "2px 0"},
+                ),
+            ], style={"paddingLeft": "18px", "listStyleType": "disc", "marginBottom": "0"}),
         ], md=6),
         dbc.Col([
             html.Div("Models", className="section-header"),
@@ -2066,37 +2099,81 @@ def _summary_stats_table():
     )
 
 
+def _build_ling_progress(current: int = 0, total: int = 6623) -> html.Div:
+    pct = int(current / total * 100) if total > 0 else 0
+    return html.Div([
+        html.P(
+            "Computing linguistic metrics via spaCy, please wait...",
+            style={"color": "#e2e8f0", "fontWeight": "600", "marginBottom": "16px",
+                   "fontSize": "1rem", "textAlign": "center"},
+        ),
+        html.Div(
+            f"processed {current:,}/{total:,} docs - {pct}%",
+            style={"color": "#94a3b8", "fontSize": "0.85rem",
+                   "marginBottom": "8px", "textAlign": "center"},
+        ),
+        dbc.Progress(value=pct, color="info", style={"height": "12px"}),
+    ], style={"padding": "40px 20px"})
+
+
+def _build_ling_results() -> html.Div:
+    stats = [
+        ("Total Sentences",
+         f"{nlp_cache.get('total_sentences', 0):,}"
+         if isinstance(nlp_cache.get("total_sentences"), int) else "N/A"),
+        ("Avg Sentences / Tweet", f"{nlp_cache.get('sents_per_doc_mean', 0):.1f}"),
+        ("Avg Tokens / Sentence", f"{nlp_cache.get('sent_length_mean', 0):.1f}"),
+    ]
+    return html.Div([
+        dbc.Alert(
+            "NLP analysis powered by spaCy (en_core_web_sm). "
+            "Computed on first visit, cached for the session.",
+            color="info", style={"fontSize": "0.85rem"},
+        ),
+        dbc.Row([
+            dbc.Col(html.Div([
+                html.Div(v, className="stat-value"),
+                html.Div(k, className="stat-label"),
+            ], className="stat-badge"), width=4)
+            for k, v in stats
+        ]),
+        html.Div(style={"height": "16px"}),
+        dcc.Graph(figure=make_pos_fig(),          config={"displayModeBar": False}),
+        html.Div(style={"height": "8px"}),
+        dcc.Graph(figure=make_ner_type_fig(),     config={"displayModeBar": False}),
+        html.Div(style={"height": "8px"}),
+        dcc.Graph(figure=make_top_entities_fig(), config={"displayModeBar": False}),
+    ])
+
+
 eda_content = dbc.Container([
     dbc.Tabs([
         # ── 3a Basic Statistics ─────────────────────────────────────────────
         dbc.Tab(label="Basic Statistics & Distribution", tab_id="eda-basic", children=[
-            html.Div(style={"height": "16px"}),
+            html.Div(style={"height": "24px"}),
             html.Div("Text Length Summary", className="section-header"),
             _summary_stats_table(),
-            html.Div(style={"height": "16px"}),
-            dcc.Graph(figure=FIG_LABEL_DIST, config={"displayModeBar": False}),
-            html.Div(style={"height": "16px"}),
-            dcc.Graph(figure=FIG_PHASE, config={"displayModeBar": False}),
-            html.Div(style={"height": "16px"}),
+            html.Div(style={"height": "36px"}),
             dcc.Graph(figure=FIG_LENGTH, config={"displayModeBar": False}),
+            html.Div(style={"height": "40px"}),
+            dcc.Graph(figure=FIG_LABEL_DIST, config={"displayModeBar": False}),
+            html.Div(style={"height": "40px"}),
+            dcc.Graph(figure=FIG_PHASE, config={"displayModeBar": False}),
+            html.Div(style={"height": "24px"}),
         ]),
 
         # ── 3b Linguistics / NER ────────────────────────────────────────────
         dbc.Tab(label="Linguistics & NER", tab_id="eda-ling", children=[
             html.Div(style={"height": "16px"}),
-            dcc.Loading(
-                html.Div(id="eda-ling-content"),
-                type="circle", color="#00d4ff",
-            ),
+            html.Div(id="eda-ling-progress-area"),
+            html.Div(id="eda-ling-results-area"),
+            dcc.Interval(id="nlp-progress-interval", interval=500,
+                         n_intervals=0, disabled=True),
         ]),
 
         # ── 3c TF-IDF ───────────────────────────────────────────────────────
         dbc.Tab(label="TF-IDF Features", tab_id="eda-tfidf", children=[
             html.Div(style={"height": "16px"}),
-            dbc.Alert(
-                "TF-IDF computed at runtime from cleaned_text via scikit-learn (no spaCy required).",
-                color="info", style={"fontSize": "0.85rem"},
-            ),
             dcc.Graph(figure=FIG_TFIDF,  config={"displayModeBar": False}),
             html.Div(style={"height": "16px"}),
             dcc.Graph(figure=FIG_BIGRAM, config={"displayModeBar": False}),
@@ -2105,14 +2182,6 @@ eda_content = dbc.Container([
         # ── 3d Word Clouds ──────────────────────────────────────────────────
         dbc.Tab(label="Word Clouds", tab_id="eda-wc", children=[
             html.Div(style={"height": "16px"}),
-            dbc.Alert(
-                "Word clouds are generated in memory from cleaned_text (domain anchors excluded). "
-                + ("Generated on first view and cached for the session."
-                   if WC_OK else
-                   "Install the wordcloud library (pip install wordcloud) to enable this section."),
-                color="info" if WC_OK else "warning",
-                style={"fontSize": "0.85rem"},
-            ),
             dcc.Loading(
                 html.Div(id="wc-content"),
                 type="circle", color="#00d4ff",
@@ -2212,11 +2281,6 @@ models_content = dbc.Container([
         # ── 4a Neural Networks ──────────────────────────────────────────────
         dbc.Tab(label="Neural Networks", tab_id="models-nn", children=[
             html.Div(style={"height": "16px"}),
-            dbc.Alert(
-                "Metrics recomputed from saved probability files (probs_*.npy) via scikit-learn. "
-                "No model weights are loaded for this display.",
-                color="info", style={"fontSize": "0.85rem"},
-            ),
             html.Div(
                 [
                     dbc.Button(
@@ -2235,16 +2299,17 @@ models_content = dbc.Container([
             ),
             _model_report_section("BiLSTM"),
             _model_report_section("ULMFiT"),
+            html.P(
+                "Metrics recomputed from saved probability files (probs_*.npy) via scikit-learn. "
+                "No model weights are loaded for this display.",
+                style={"color": "#475569", "fontSize": "0.75rem",
+                       "marginTop": "12px", "marginBottom": "0"},
+            ),
         ]),
 
         # ── 4b Transformers ─────────────────────────────────────────────────
         dbc.Tab(label="Transformers", tab_id="models-tr", children=[
             html.Div(style={"height": "16px"}),
-            dbc.Alert(
-                "Metrics recomputed from saved probability files (probs_*.npy) via scikit-learn. "
-                "No model weights are loaded for this display.",
-                color="info", style={"fontSize": "0.85rem"},
-            ),
             html.Div(
                 [
                     dbc.Button(
@@ -2264,6 +2329,12 @@ models_content = dbc.Container([
             _model_report_section("DistilBERT"),
             _model_report_section("RoBERTa"),
             _model_report_section("DeBERTa-v3"),
+            html.P(
+                "Metrics recomputed from saved probability files (probs_*.npy) via scikit-learn. "
+                "No model weights are loaded for this display.",
+                style={"color": "#475569", "fontSize": "0.75rem",
+                       "marginTop": "12px", "marginBottom": "0"},
+            ),
         ]),
 
         # ── 4c Comparison ───────────────────────────────────────────────────
@@ -2277,20 +2348,6 @@ models_content = dbc.Container([
             html.Hr(style={"borderColor": "#1e3a5f"}),
 
             html.Div("Live Inference: Test-Set Tweet", className="section-header"),
-            dbc.Alert(
-                [
-                    html.B("100-tweet balanced batch"),
-                    " (seed=42, ≥20 per minority class). Click a tweet to select it, "
-                    "or press ",
-                    html.B("Tweet"),
-                    " for a random pick, then ",
-                    html.B("Classify All"),
-                    " to run all 5 models. Requires model weights (",
-                    html.Code("python download_models.py"),
-                    ").",
-                ],
-                color="info", style={"fontSize": "0.85rem"},
-            ),
             dbc.Row([
                 # Left column: scrollable tweet table
                 dbc.Col([
@@ -2491,39 +2548,26 @@ _navbar = dbc.Navbar(
             html.Span([_moon_icon, "ARTEMIS II"]),
             href="#",
         ),
+        html.Div([
+            html.Div(
+                "Universita Cattolica del Sacro Cuore",
+                style={"fontWeight": "600", "color": "#e2e8f0",
+                       "fontSize": "0.72rem", "lineHeight": "1.4",
+                       "letterSpacing": "0.01em"},
+            ),
+            html.Div(
+                "Data Visualization & Text Mining",
+                style={"color": "#94a3b8", "fontSize": "0.65rem",
+                       "letterSpacing": "0.01em"},
+            ),
+        ], style={"textAlign": "right", "marginLeft": "auto",
+                  "pointerEvents": "none"}),
     ], fluid=True),
     color="dark", dark=True, sticky="top",
 )
 
 app.layout = html.Div([
     _navbar,
-    html.Div(
-        [
-            html.Div(
-                "Università Cattolica del Sacro Cuore",
-                style={"fontWeight": "600", "color": "#e2e8f0",
-                       "fontSize": "0.72rem", "lineHeight": "1.4",
-                       "letterSpacing": "0.01em"},
-            ),
-            html.Div(
-                "Text Mining and Data Visualization",
-                style={"color": "#94a3b8", "fontSize": "0.65rem",
-                       "letterSpacing": "0.01em"},
-            ),
-        ],
-        style={
-            "position": "fixed",
-            "top": "62px",
-            "right": "14px",
-            "zIndex": "100",
-            "textAlign": "right",
-            "pointerEvents": "none",
-            "background": "rgba(8,9,26,0.75)",
-            "borderRadius": "4px",
-            "padding": "4px 8px",
-            "border": "1px solid rgba(30,58,95,0.6)",
-        },
-    ),
     dbc.Container([
         html.Div(style={"height": "16px"}),
         dbc.Tabs([
@@ -2741,60 +2785,53 @@ def render_wordclouds(active_tab):
 
 
 @app.callback(
-    Output("eda-ling-content", "children"),
+    Output("eda-ling-progress-area", "children"),
+    Output("eda-ling-results-area", "children"),
+    Output("nlp-progress-interval", "disabled"),
     Input("eda-inner-tabs", "active_tab"),
+    Input("nlp-progress-interval", "n_intervals"),
     prevent_initial_call=True,
 )
-def render_ling_content(active_tab):
+def render_or_update_ling(active_tab, n_intervals):
     global nlp_cache, _nlp_spacy_computed
-    if active_tab != "eda-ling":
-        return no_update
+    ctx = callback_context
+    trigger = ctx.triggered[0]["prop_id"].split(".")[0] if ctx.triggered else ""
 
-    if not nlp_cache:
+    if trigger == "eda-inner-tabs":
+        if active_tab != "eda-ling":
+            return no_update, no_update, no_update
+        if nlp_cache:
+            return html.Div(), _build_ling_results(), True
         if not SPACY_OK:
-            return dbc.Alert(
-                "spaCy is not installed, run: "
-                "pip install spacy && python -m spacy download en_core_web_sm",
-                color="warning", style={"fontSize": "0.85rem"},
+            return (
+                html.Div(),
+                dbc.Alert(
+                    "spaCy is not installed, run: "
+                    "pip install spacy && python -m spacy download en_core_web_sm",
+                    color="warning", style={"fontSize": "0.85rem"},
+                ),
+                True,
             )
         with _nlp_lock:
-            if not _nlp_spacy_computed:
-                nlp_cache = _compute_nlp_cache()
-                _nlp_spacy_computed = True
+            if not _nlp_progress["running"] and not _nlp_spacy_computed:
+                threading.Thread(target=_run_nlp_background, daemon=True).start()
+        current = _nlp_progress.get("current", 0)
+        total   = _nlp_progress.get("total", 6623)
+        return _build_ling_progress(current, total), html.Div(), False
 
-    if not nlp_cache:
-        return dbc.Alert(
-            "NLP computation produced no results.", color="danger",
-            style={"fontSize": "0.85rem"},
+    # Interval trigger: poll background thread progress
+    if _nlp_progress.get("done"):
+        if nlp_cache:
+            return html.Div(), _build_ling_results(), True
+        return (
+            html.Div(),
+            dbc.Alert("NLP computation produced no results.", color="danger",
+                      style={"fontSize": "0.85rem"}),
+            True,
         )
-
-    stats = [
-        ("Total Sentences",
-         f"{nlp_cache.get('total_sentences', 0):,}"
-         if isinstance(nlp_cache.get("total_sentences"), int) else "N/A"),
-        ("Avg Sentences / Tweet", f"{nlp_cache.get('sents_per_doc_mean', 0):.1f}"),
-        ("Avg Tokens / Sentence", f"{nlp_cache.get('sent_length_mean', 0):.1f}"),
-    ]
-    return html.Div([
-        dbc.Alert(
-            "NLP analysis powered by spaCy (en_core_web_sm). "
-            "Computed on first visit, cached for the session.",
-            color="info", style={"fontSize": "0.85rem"},
-        ),
-        dbc.Row([
-            dbc.Col(html.Div([
-                html.Div(v, className="stat-value"),
-                html.Div(k, className="stat-label"),
-            ], className="stat-badge"), width=4)
-            for k, v in stats
-        ]),
-        html.Div(style={"height": "16px"}),
-        dcc.Graph(figure=make_pos_fig(),          config={"displayModeBar": False}),
-        html.Div(style={"height": "8px"}),
-        dcc.Graph(figure=make_ner_type_fig(),     config={"displayModeBar": False}),
-        html.Div(style={"height": "8px"}),
-        dcc.Graph(figure=make_top_entities_fig(), config={"displayModeBar": False}),
-    ])
+    current = _nlp_progress.get("current", 0)
+    total   = _nlp_progress.get("total", 6623)
+    return _build_ling_progress(current, total), html.Div(), False
 
 
 @app.callback(

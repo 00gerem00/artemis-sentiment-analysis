@@ -1,18 +1,18 @@
-# ARTEMIS II - X (Twitter) Sentiment Analysis
+# **ARTEMIS II - X (Twitter) Sentiment Analysis**
 
-Four-class sentiment analysis of tweets about NASA's Artemis II mission, comparing five NLP models from recurrent networks to transformers, with an interactive Dash dashboard.
+Four-class sentiment analysis of tweets about NASA's Artemis II mission, comparing five NLP models from recurrent neural networks to transformers, with an interactive Dash dashboard.
 
-> **Dataunderdogs** - Data Visualization & Text Mining, Universita Cattolica del Sacro Cuore
-
----
-
-## Overview
-
-This project classifies public reaction to NASA's Artemis II mission - the April 2026 crewed lunar flyby - using tweets collected across five mission phases (departure, flyby, photo day, return, and a targeted conspiracy-hunt collection). Five NLP models are trained, evaluated, and compared: a BiLSTM with GloVe embeddings, ULMFiT (AWD-LSTM), and three fine-tuned transformers (DistilBERT, RoBERTa, DeBERTa-v3). All results are surfaced through an interactive Dash dashboard featuring per-class metrics, confusion matrices, probability distributions, model comparisons, and a Live Test panel for real-time inference with optional LLM-generated explanations.
+> **Dataunderdogs** - Data Visualization and Text Mining, Universita Cattolica del Sacro Cuore, Milan (IT)
 
 ---
 
-## Repository Structure
+## **Overview**
+
+This project classifies public reaction to NASA's Artemis II mission, the April 2026 crewed lunar flyby, using tweets collected across five mission phases (departure, flyby, photo day, return, and a targeted conspiracy-hunt collection). Five NLP models are trained, evaluated, and compared: a BiLSTM with GloVe embeddings, ULMFiT (AWD-LSTM), and three fine-tuned transformers (DistilBERT, RoBERTa, DeBERTa-v3). All results are surfaced through an interactive Dash dashboard featuring per-class metrics, confusion matrices, probability distributions, model comparisons, and a Live Test panel for real-time inference with optional LLM-generated explanations.
+
+---
+
+## **Repository Structure**
 
 ```
 ARTEMIS_Sentiment_Analysis/
@@ -48,11 +48,10 @@ ARTEMIS_Sentiment_Analysis/
 │   ├── 04_DistilBERT_RoBERTa_DeBERTa.ipynb
 │   └── 05_model_comparison.ipynb
 ├── results/
-│   ├── bilstm/                          # Per-variant metrics, confusion matrices, probs
+│   ├── bilstm/                          # Per-configuration metrics, confusion matrices, probs
 │   ├── grid_search/
 │   ├── transformers/
 │   ├── ulmfit/
-│   ├── wordclouds/
 │   └── latency_cpu.json
 ├── download_models.py                   # Fetches heavy weights from Google Drive
 └── requirements.txt
@@ -60,7 +59,7 @@ ARTEMIS_Sentiment_Analysis/
 
 ---
 
-## The 4 Sentiment Classes
+## **Sentiment Classes**
 
 | Class | Definition |
 |---|---|
@@ -71,7 +70,7 @@ ARTEMIS_Sentiment_Analysis/
 
 ---
 
-## The 5 Models
+## **Models**
 
 | Model | Description |
 |---|---|
@@ -83,7 +82,7 @@ ARTEMIS_Sentiment_Analysis/
 
 ---
 
-## Requirements
+## **Requirements**
 
 **Python 3.11 or 3.12 is required.** Python 3.13 is not supported: pinned libraries including `tensorflow`, `fastai`, `transformers`, and `numpy` do not yet have 3.13-compatible wheels.
 
@@ -91,9 +90,9 @@ All Python dependencies are listed in `requirements.txt`.
 
 ---
 
-## Setup
+## **Setup**
 
-### Minimal - read the notebooks and explore the dashboard (pre-computed results)
+### **Minimal: read the notebooks and explore the dashboard (pre-computed results)**
 
 ```bash
 git clone https://github.com/00gerem00/ARTEMIS_Sentiment_Analysis.git
@@ -114,7 +113,7 @@ python -m spacy download en_core_web_sm
 
 This is sufficient to run all notebooks and view all pre-computed results in the dashboard.
 
-### Full - enable Live Test and live comparison classification
+### **Full: enable Live Test and live comparison classification**
 
 After completing the minimal setup, download the heavy model weights from Google Drive (~2.5 GB total):
 
@@ -126,7 +125,7 @@ This fetches the GloVe Twitter embeddings, the ULMFiT classifier, and the three 
 
 ---
 
-## Running the Notebooks
+## **Running the Notebooks**
 
 The notebooks work in two environments without any code changes:
 
@@ -137,7 +136,7 @@ Notebooks 01-04 cover data preparation, EDA, and model training. Notebook 05 con
 
 ---
 
-## Running the Dashboard
+## **Running the Dashboard**
 
 ```bash
 python dashboard/app.py
@@ -149,36 +148,32 @@ The dashboard runs on Windows, macOS, and Linux. A minimal setup (no downloaded 
 
 ---
 
-## LLM-Based Explanations
+## **LLM-Based Explanations**
+
+### **How it works**
 
 The Live Test section of the dashboard offers an optional post-hoc explanation feature powered by an LLM. This feature exists only in the dashboard and has no equivalent in the notebooks.
 
-### What it is
-
 After a tweet is classified, the dashboard can call the Groq API (`llama-3.1-8b-instant`) to generate a short natural-language explanation of each model's prediction. The goal is to help interpret why a model assigned a particular class, not just what it predicted.
-
-### How it works
 
 The system uses a two-phase design:
 
 1. **Reference judgment (Phase 1)**: The LLM reads the raw tweet and independently assigns one of the four sentiment classes, with no knowledge of any model's prediction. This reference class serves as a neutral baseline.
 2. **Per-model comparison (Phase 2)**: For each selected model, the LLM compares that model's predicted class to the Phase-1 reference and delivers a verdict: correct (prediction matches reference), wrong (prediction differs and the reference is a better fit), or defensible (for genuinely ambiguous tweets where both labels are reasonable).
 
-### Prompt engineering
-
 Both phases use few-shot prompting with examples that cover correct predictions, wrong predictions, ambiguous tweets, and minority-class cases (Conspiratorial, Critical/Skeptical) to improve coverage of hard cases. Temperature is set to 0.2 for consistent, low-variance answers. Responses are capped at 2-3 sentences and framed as a critical independent assessment rather than a defence of the model's output.
 
-### Limitations
+### **Limitations**
 
 The LLM has no access to the models' internal weights, attention patterns, or output probabilities. Its explanation is an independent post-hoc opinion based solely on the tweet text and the predicted label. It may itself be inaccurate, particularly for short or highly ambiguous tweets.
 
-### API key
+### **API key**
 
 You supply your own Groq API key at runtime using the password field in the dashboard. The key is used for the current browser session only and is never written to disk or logged anywhere.
 
 ---
 
-## Authors
+## **Authors**
 
 **Dataunderdogs**
 
@@ -189,6 +184,6 @@ You supply your own Groq API key at runtime using the password field in the dash
 
 ---
 
-## Course
+## **Course**
 
-Developed for **Data Visualization & Text Mining** at Universita Cattolica del Sacro Cuore.
+Developed for Data Visualization and Text Mining course at Universita Cattolica del Sacro Cuore, Milan (IT).

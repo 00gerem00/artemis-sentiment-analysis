@@ -63,10 +63,10 @@ ARTEMIS_Sentiment_Analysis/
 
 | Class | Definition |
 |---|---|
-| **Conspiratorial** | Tweets promoting hoax theories, staged-mission claims, or distrust of official sources. |
-| **Critical/Skeptical** | Tweets expressing doubt, concern, or reasoned opposition without conspiracy framing. |
-| **Enthusiastic** | Tweets showing excitement, pride, or strong support for the mission. |
-| **Neutral** | Informational or news-style tweets with no strong positive or negative stance. |
+| **Conspiratorial** | Denies the mission's authenticity: hoax claims, CGI accusations, or staged-mission cover-up narratives. |
+| **Critical/Skeptical** | Questions the mission's value, cost, or execution; practical doubt and reasoned opposition, not denial. |
+| **Enthusiastic** | Positive, excited reactions: pride, celebration, or strong support for the mission. |
+| **Neutral** | Informational or news-style; reports facts or events with no strong positive or negative opinion. |
 
 ---
 
@@ -74,11 +74,11 @@ ARTEMIS_Sentiment_Analysis/
 
 | Model | Description |
 |---|---|
-| **BiLSTM** | Bidirectional LSTM trained from scratch with 100-dimensional GloVe Twitter embeddings. |
-| **ULMFiT** | AWD-LSTM language model (fastai) fine-tuned via gradual unfreezing and discriminative learning rates. |
-| **DistilBERT** | Distilled BERT base (uncased), fine-tuned on the 4-class task; optimised for speed. |
-| **RoBERTa** | Optimised BERT pretraining, fine-tuned for a strong predictive-quality/size balance. |
-| **DeBERTa-v3** | Disentangled-attention transformer (small), the highest predictive-quality model in the analysis. |
+| **BiLSTM** | Bidirectional LSTM with pre-trained 100-d GloVe Twitter embeddings, trained from scratch on the Artemis corpus. |
+| **ULMFiT** | AWD-LSTM language model with three-stage transfer learning: general-domain pre-training, domain adaptation on unlabelled tweets, then classifier fine-tuning. |
+| **DistilBERT** | Pre-trained Transformer (distilled BERT base, uncased) fine-tuned on the Artemis 4-class task; optimised for inference speed. |
+| **RoBERTa** | Pre-trained Transformer (optimised BERT pretraining) fine-tuned on the Artemis corpus; strong quality-to-size balance. |
+| **DeBERTa-v3** | Pre-trained Transformer (disentangled-attention, small) fine-tuned on the Artemis corpus; highest predictive quality in the comparison. |
 
 ---
 
@@ -133,6 +133,30 @@ The notebooks work in two environments without any code changes:
 - **Local** - after `pip install -r requirements.txt`, those same cells will report "already satisfied" and skip silently; no manual editing is needed.
 
 Notebooks 01-04 cover data preparation, EDA, and model training. Notebook 05 contains the final cross-model comparison and aggregated evaluation results.
+
+---
+
+## **How to Use the Notebooks (Display Mode vs. Full Retrain)**
+
+The training notebooks (03 and 04) are controlled by a single flag set near the top of each notebook.
+
+### **Display Mode (default)**
+
+`FORCE_RETRAIN = False`
+
+In this mode each notebook loads and displays the pre-computed results -- metrics, training histories, confusion matrices, and saved probability files (`probs_*.npy`) -- without re-running any training. This is the correct starting point for reading and evaluating the reported results. It is fast, requires no GPU, and works with the minimal setup only (no downloaded model weights needed).
+
+### **Full Retrain**
+
+`FORCE_RETRAIN = True`
+
+Setting this flag in notebook 03 or 04 discards the saved results and retrains the models from scratch on the fixed train/val/test split. This is slow. For the BiLSTM (notebook 03) a GPU is helpful but not strictly required; for the three transformers (notebook 04) a GPU is strongly recommended. A full retrain also requires the full model weights -- run `python download_models.py` first.
+
+### **Notebook 05 (Model Comparison) -- no FORCE_RETRAIN flag**
+
+Notebook 05 has no `FORCE_RETRAIN` flag. Quality metrics (macro-F1 as the primary metric, with per-class precision, recall, and F1) are always recomputed live from the five saved probability files (`probs_*.npy`). This is fast and places all five models on a directly comparable footing, independent of the frameworks used in the earlier notebooks.
+
+Inference latency is handled differently. It is read from the pre-computed file `results/latency_cpu.json` and is never re-measured when the notebook runs. This is intentional: latency is hardware-dependent and was originally measured under controlled conditions (one framework loaded at a time, to avoid cross-framework CPU contention). Re-measuring on a different machine would produce numbers that are not comparable to the reported values, so the saved file is the authoritative source for latency figures.
 
 ---
 

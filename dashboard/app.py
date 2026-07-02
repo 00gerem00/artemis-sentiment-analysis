@@ -1164,8 +1164,9 @@ def get_groq_reference(tweet: str, api_key: str = "") -> tuple[str, str] | None:
                     if c.lower() == candidate.lower() or c.lower() in candidate.lower():
                         ref_class = c
                         break
-                if not ref_class:
-                    ref_class = candidate
+                # if no canonical match, leave ref_class="" so fallback below can try,
+                # and the final "ref_class or 'Unknown'" guard prevents a spurious string
+                # from reaching Phase 2
             elif s.startswith("Reason:"):
                 reason_parts.append(s[len("Reason:"):].strip())
             elif reason_parts:
@@ -1194,13 +1195,17 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
 
     system_msg = (
         "You are reviewing an NLP model's sentiment prediction against an independent "
-        "reference assessment. The reference class was determined independently and "
-        "should be treated as the established assessment for this tweet.\n\n"
+        "reference assessment. The reference class was determined independently and is "
+        "generally reliable, but not infallible — it reflects one informed reading, not "
+        "ground truth.\n\n"
         "Respond in 2-3 sentences:\n"
         "• Prediction matches reference → confirm it is correct and briefly explain why "
         "the reference class fits.\n"
-        "• Prediction differs from reference → state the prediction is wrong, name the "
-        "reference class as the better fit, and explain why.\n"
+        "• Prediction differs from reference and the reference is clearly the better fit "
+        "→ state the prediction is wrong and explain why.\n"
+        "• Prediction differs from reference but the tweet is genuinely ambiguous → "
+        "acknowledge both labels are defensible and explain why the tweet lacks clear "
+        "sentiment markers.\n"
         "Do not re-assess the tweet from scratch."
     )
 
@@ -1272,6 +1277,26 @@ def get_groq_comparison(tweet: str, reference_class: str, predicted_class: str,
                 "The model's prediction matches the reference: Neutral is correct. "
                 "The tweet reports factual events without evaluative language, consistent "
                 "with the reference assessment."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Tweet: "The crew of Artemis II just crossed 300,000 km from Earth. '
+                'Remarkable what humans can do when we choose to spend the money."\n'
+                "Reference class: Enthusiastic\n"
+                "Model predicted: Critical/Skeptical"
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": (
+                "The prediction is defensible — this tweet is genuinely ambiguous. "
+                "'Remarkable what humans can do' reads as admiration, consistent with "
+                "the reference Enthusiastic, but 'when we choose to spend the money' "
+                "introduces a note of cost-awareness that could reasonably support "
+                "Critical/Skeptical. The tweet does not commit to a clear sentiment, "
+                "so neither label is obviously wrong."
             ),
         },
     ]

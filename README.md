@@ -152,7 +152,7 @@ In this mode each notebook loads and displays the pre-computed results -- metric
 
 Setting this flag in notebook 03 or 04 discards the saved results and retrains the models from scratch on the fixed train/val/test split. This is slow. For the BiLSTM (notebook 03) a GPU is helpful but not strictly required; for the three transformers (notebook 04) a GPU is strongly recommended. A full retrain also requires the full model weights -- run `python download_models.py` first.
 
-### **Notebook 05 (Model Comparison) -- no FORCE_RETRAIN flag**
+### **Notebook 05 (Model Comparison): no FORCE_RETRAIN flag**
 
 Notebook 05 has no `FORCE_RETRAIN` flag. Quality metrics (macro-F1 as the primary metric, with per-class precision, recall, and F1) are always recomputed live from the five saved probability files (`probs_*.npy`). This is fast and places all five models on a directly comparable footing, independent of the frameworks used in the earlier notebooks.
 

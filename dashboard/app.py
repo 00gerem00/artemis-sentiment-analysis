@@ -187,10 +187,24 @@ def _load_or_none(path, loader, *args, **kwargs):
         return None
 
 
+def _decode_mojibake(text: str) -> str:
+    """Repair UTF-8→Latin-1→UTF-8 double-encoding mojibake in original tweet text.
+
+    The master CSV was saved with emoji bytes misread as Latin-1 and re-written as UTF-8,
+    so the raw bytes are still intact but wrapped in an extra UTF-8 layer.
+    Reversing: encode back to Latin-1 bytes then decode as UTF-8 recovers the originals.
+    Falls back silently to the unmodified string if repair is not possible.
+    """
+    try:
+        return text.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text
+
+
 print("[startup] Loading data…")
 
 df_master = _load_or_none(MASTER_CSV, pd.read_csv, encoding="utf-8")
-df_test   = _load_or_none(TEST_CSV,   pd.read_csv)
+df_test   = _load_or_none(TEST_CSV,   pd.read_csv, encoding="utf-8")
 
 # EDA dataframe: drop the 1 row with NaN Sentiment_label → 6,623 rows,
 # matching notebook 02 cell-8 (df.dropna(subset=['Sentiment_label']))
@@ -330,9 +344,9 @@ def make_phase_fig():
     if df_eda is None:
         return _empty_fig()
     phases = {
-        "departure": "1 - Departure",
-        "flyby":     "2 - Flyby",
-        "return":    "3 - Return",
+        "departure": "Departure",
+        "flyby":     "Flyby",
+        "return":    "Return",
     }
     fig = make_subplots(
         rows=1, cols=3,
@@ -1924,7 +1938,7 @@ prep_steps = [
     ("2. Drop Missing Labels", "Rows without a Sentiment_label (NaN) removed. Remaining: 6,671 labeled rows. Shorthand labels mapped to full names: E→Enthusiastic, N→Neutral, C→Conspiratorial, S→Critical/Skeptical."),
     ("3. Text Cleaning", "Applied sequentially: (A) Mojibake fix (Latin-1 → UTF-8 decode attempt); (B) Emoji demojization, preserving semantic content; (C) URL removal; (D) '@' symbol removal (keeps username); (E) '#' removal (keeps text); (F) HTML entity removal (&amp; etc.); (G) Whitespace normalization."),
     ("4. Exact-Duplicate Removal", "12 exact duplicate tweets (matching on raw text) removed. Remaining: 6,659."),
-    ("5. Near-Duplicate Removal", "Tweets masked by replacing @mentions→<USER> and URLs→<URL>, then lowercased. 35 near-duplicates removed. Remaining: 6,624."),
+    ("5. Near-Duplicate Removal", "Tweets masked by replacing @mentions→<USER> and URLs→<URL>, then lowercased. 35 near-duplicates removed. Remaining: 6,623."),
     ("6. Final Formatting", "Underscores in demojized text (e.g. folded_hands) replaced with spaces; whitespace re-normalized."),
     ("7. Output", "Final dataset saved as data/processed/artemis_master_dataset.csv with columns: text (raw), Sentiment_label, source, cleaned_text."),
 ]
@@ -1956,13 +1970,17 @@ if df_master is not None:
         _grp = df_master[df_master["Sentiment_label"] == _cls]
         if len(_grp) > 0:
             _tbl_frames.append(_grp.sample(n=min(len(_grp), _quota), random_state=42))
-    tbl_data = (
+    _tbl_records = (
         pd.concat(_tbl_frames)
         .sample(frac=1, random_state=42)
         .reset_index(drop=True)
         [[c["id"] for c in tbl_columns]]
         .to_dict("records")
     ) if _tbl_frames else []
+    tbl_data = [
+        {**rec, "text": _decode_mojibake(rec.get("text") or "")}
+        for rec in _tbl_records
+    ]
 else:
     tbl_columns, tbl_data = [], []
 
@@ -2256,12 +2274,10 @@ if df_test is not None:
             )
             _batch_table_data = [
                 {
-                    "row":     int(i),
-                    "label":   str(row.get("label", "")),
-                    "preview": (
-                        str(row.get("text", ""))[:95] + "…"
-                        if len(str(row.get("text", ""))) > 95
-                        else str(row.get("text", ""))
+                    "row":   int(i),
+                    "label": str(row.get("label", "")),
+                    "preview": (lambda t: t[:95] + "…" if len(t) > 95 else t)(
+                        _decode_mojibake(str(row.get("text", "")))
                     ),
                 }
                 for i, row in _inference_batch.iterrows()
@@ -2539,6 +2555,7 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.CYBORG],
     title="ARTEMIS II",
     suppress_callback_exceptions=True,
+    meta_tags=[{"charset": "utf-8"}],
 )
 server = app.server
 
@@ -2633,7 +2650,7 @@ app.clientside_callback(
     Output("master-table", "active_cell"),
     Input("master-table", "active_cell"),
     Input("tweet-modal-close", "n_clicks"),
-    State("master-table", "derived_virtual_data"),
+    State("master-table", "derived_viewport_data"),
     prevent_initial_call=True,
 )
 def handle_tweet_modal(active_cell, close_clicks, rows):
@@ -2648,7 +2665,7 @@ def handle_tweet_modal(active_cell, close_clicks, rows):
     row = rows[active_cell["row"]]
     label    = str(row.get("Sentiment_label", ""))
     source   = str(row.get("source", ""))
-    original = str(row.get("text", ""))
+    original = _decode_mojibake(str(row.get("text", "")))
     cleaned  = str(row.get("cleaned_text", ""))
     label_color = {
         "Enthusiastic":       "#22c55e",
@@ -2950,7 +2967,7 @@ def select_tweet_from_table(selected_rows):
         return no_update, no_update, no_update
     idx   = selected_rows[0]
     row   = _inference_batch.iloc[idx]
-    text  = str(row.get("text", ""))
+    text  = _decode_mojibake(str(row.get("text", "")))
     label = str(row.get("label", ""))
     label_html = [
         "True label: ",

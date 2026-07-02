@@ -349,3 +349,157 @@ textarea.form-control {
 li {
   color: var(--text-muted);
 }
+
+/* ── Animations & Transitions ──────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────────────────────── */
+
+/* Breathing neon-glow on cards/panels — slow, alive, not frantic */
+@keyframes artemisGlow {
+  from {
+    box-shadow:
+      0 0  7px rgba(0, 212, 255, 0.18),
+      0 0 18px rgba(0, 212, 255, 0.07),
+      0 2px 12px rgba(0, 0, 0, 0.40);
+  }
+  to {
+    box-shadow:
+      0 0 22px rgba(0, 212, 255, 0.52),
+      0 0 46px rgba(0, 212, 255, 0.18),
+      0 4px 20px rgba(0, 0, 0, 0.50);
+  }
+}
+
+/* Section enter: noticeable upward slide + scale-up */
+@keyframes artemisFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Tab content: strong visible transition on activation ── */
+.tab-content > .tab-pane.active {
+  animation: artemisFadeIn 0.4s ease forwards;
+}
+
+/* ── Cards: glowing pulsing border + lift on hover ── */
+.card {
+  border: 1px solid rgba(0, 212, 255, 0.22) !important;
+  animation: artemisGlow 2.6s ease-in-out infinite alternate;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.card:hover {
+  animation: none;
+  transform: translateY(-5px);
+  border-color: rgba(0, 212, 255, 0.68) !important;
+  box-shadow:
+    0 0 30px rgba(0, 212, 255, 0.62),
+    0 0 62px rgba(0, 212, 255, 0.22),
+    0 10px 36px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* ── Stat badges: same breathing glow, slight phase offset ── */
+.stat-badge {
+  animation: artemisGlow 2.6s ease-in-out 0.6s infinite alternate;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: default;
+}
+.stat-badge:hover {
+  animation: none;
+  transform: translateY(-4px);
+  border-color: rgba(0, 212, 255, 0.68) !important;
+  box-shadow:
+    0 0 26px rgba(0, 212, 255, 0.58),
+    0 6px 22px rgba(0, 0, 0, 0.48);
+}
+
+/* ── Model result cards ── */
+.model-result-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.model-result-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 24px rgba(0, 212, 255, 0.38),
+    0 6px 22px rgba(0, 0, 0, 0.45);
+}
+
+/* ── Hero banner: entrance + persistent slower glow ── */
+.hero-banner {
+  border: 1px solid rgba(0, 212, 255, 0.28) !important;
+  animation: artemisFadeIn 0.4s ease forwards,
+             artemisGlow 3.2s ease-in-out 0.4s infinite alternate;
+}
+
+/* ── Buttons: persistent glow, intensifies on hover ── */
+.btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+              background-color 0.2s ease, border-color 0.2s ease,
+              color 0.2s ease !important;
+}
+.btn:active {
+  transform: translateY(1px) !important;
+  box-shadow: none !important;
+}
+
+/* Primary CTA: always glowing */
+.btn-primary {
+  box-shadow:
+    0 0 14px rgba(0, 212, 255, 0.40),
+    0 2px 8px rgba(0, 0, 0, 0.30) !important;
+}
+.btn-primary:hover {
+  transform: translateY(-3px) !important;
+  box-shadow:
+    0 0 28px rgba(0, 212, 255, 0.75),
+    0 0 58px rgba(0, 212, 255, 0.28),
+    0 6px 20px rgba(0, 0, 0, 0.42) !important;
+}
+
+/* Secondary / model shortcut buttons */
+.btn-secondary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow:
+    0 0 20px rgba(0, 212, 255, 0.50),
+    0 4px 14px rgba(0, 0, 0, 0.32) !important;
+  border-color: rgba(0, 212, 255, 0.58) !important;
+}
+.btn-outline-secondary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.40) !important;
+}
+
+/* ── Nav tabs: glow text on hover + active state ── */
+.nav-tabs .nav-link {
+  transition: all 0.25s ease;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--text-main) !important;
+  background-color: rgba(0, 212, 255, 0.07) !important;
+  border-bottom-color: rgba(0, 212, 255, 0.42) !important;
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.60);
+}
+.nav-tabs .nav-link.active {
+  text-shadow: 0 0 14px rgba(0, 212, 255, 0.80);
+}
+
+/* ── Form controls: enhanced focus ring ── */
+.form-control,
+.form-select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.form-control:focus {
+  border-color: var(--accent-blue) !important;
+  box-shadow:
+    0 0 0 3px rgba(0, 212, 255, 0.20),
+    0 0 22px rgba(0, 212, 255, 0.18) !important;
+}

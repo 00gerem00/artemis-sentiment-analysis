@@ -1,0 +1,17 @@
+{
+    "DeBERTa-v3": {
+        "parameters": 184425220
+    },
+    "RoBERTa": {
+        "parameters": 124648708
+    },
+    "DistilBERT": {
+        "parameters": 66956548
+    },
+    "ULMFiT": {
+        "parameters": 21734380
+    },
+    "BiLSTM": {
+        "parameters": 1234308
+    }
+}
